@@ -21,7 +21,7 @@ type Model struct {
 func init() {
 	var err error
 
-	db, err = gorm.Open("postgres", "host=127.0.0.1 user=byung dbname=BlogByung sslmode=disable password=1qaz@WSX")
+	db, err = gorm.Open("postgres", "host=127.0.0.1 user=byung dbname=blogbyung sslmode=disable password=1qaz@WSX")
 	if err != nil {
 		panic(err.Error())
 	}

@@ -17,18 +17,39 @@ import (
 
 type jwtUserClaims struct {
 	Nickname string `json:"nickname"`
+	Avatar   string `json:"avatar"`
 	ID       uint   `json:"id"`
 	Role     int    `json:"role"`
 	jwt.StandardClaims
 }
 
 func Login(c echo.Context) error {
-	username := c.FormValue("username")
+	email := c.FormValue("email")
 	password := c.FormValue("password")
 
-	log.Println("username: ", username)
-	log.Println("password: ", password)
-	return c.String(http.StatusOK, "test")
+	log.Println(email)
+	if ret := verifyEmailFormat(email); ret == false {
+		return c.String(http.StatusInternalServerError, "该邮箱格式不正确!")
+	}
+
+	passHashStr, err := hash256(password)
+	if err != nil {
+		errinfo := fmt.Sprintf("%s", err)
+		log.Println("password calculate hash256: " + errinfo)
+		return c.String(http.StatusInternalServerError, "内部错误!")
+	}
+
+	user, err := models.QueryUserByEmailAndPassword(email, passHashStr)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "邮箱或密码错误!")
+	}
+	jwtToken, err := getJWTToken(&user)
+	if err != nil {
+		errinfo := fmt.Sprintf("%s", err)
+		log.Println("generate jwt token: " + errinfo)
+		return c.String(http.StatusInternalServerError, "内部错误!")
+	}
+	return c.String(http.StatusOK, jwtToken)
 }
 
 func Register(c echo.Context) error {
@@ -65,7 +86,7 @@ func Register(c echo.Context) error {
 		Nickname: nickname,
 		Email:    email,
 		Password: passHashStr,
-		Avatar:   "/static/images/info-image.png",
+		Avatar:   "/static/media/info-image.png",
 		Role:     1,
 	}
 	if err := models.SaveUser(user); err != nil {
@@ -80,6 +101,7 @@ func Register(c echo.Context) error {
 		log.Println("generate jwt token: " + errinfo)
 		return c.String(http.StatusInternalServerError, "内部错误!")
 	}
+	log.Println(jwtToken)
 	return c.String(http.StatusOK, jwtToken)
 }
 
@@ -89,10 +111,21 @@ func verifyEmailFormat(email string) bool {
 	return reg.MatchString(email)
 }
 
+func hash256(str string) (string, error) {
+	hash := sha256.New()
+	if _, err := hash.Write([]byte(str)); err != nil {
+		return "", err
+	}
+	hashHex := hash.Sum(nil)
+	hashStr := hex.EncodeToString(hashHex)
+	return hashStr, nil
+}
+
 func getJWTToken(user *models.User) (string, error) {
 	//Set user claims
 	claims := &jwtUserClaims{
 		user.Nickname,
+		user.Avatar,
 		user.ID,
 		user.Role,
 		jwt.StandardClaims{
