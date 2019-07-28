@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"byung/bygmb/models"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"byung.cn/blog-byung/models"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 )
