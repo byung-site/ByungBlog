@@ -1,8 +1,8 @@
 package main
 
 import (
-	controller "byung/bygmb/controllers"
-	_ "byung/bygmb/models"
+	controller "byung-cn/byung/controllers"
+	_ "byung-cn/byung/models"
 
 	"github.com/labstack/echo"
 )

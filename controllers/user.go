@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"byung/bygmb/models"
+	"byung-cn/byung/models"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
