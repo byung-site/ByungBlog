@@ -56,7 +56,7 @@ func Register(c echo.Context) error {
 	nickname := c.FormValue("nickname")
 	email := c.FormValue("email")
 	password := c.FormValue("password")
-	repeat := c.FormValue("repeat")
+	confirm := c.FormValue("confirm")
 
 	if user, err := models.QueryUserByNickname(nickname); err == nil && user.ID > 0 {
 		return c.String(http.StatusInternalServerError, "该昵称已存在!")
@@ -73,7 +73,8 @@ func Register(c echo.Context) error {
 	if passLen := len(password); passLen < 8 {
 		return c.String(http.StatusInternalServerError, "密码要求8位以上")
 	}
-	if strings.Compare(password, repeat) != 0 {
+	log.Println(password, " ", confirm)
+	if strings.Compare(password, confirm) != 0 {
 		return c.String(http.StatusInternalServerError, "密码不一致!")
 	}
 
@@ -95,14 +96,7 @@ func Register(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "用户注册失败!")
 	}
 
-	jwtToken, err := getJWTToken(user)
-	if err != nil {
-		errinfo := fmt.Sprintf("%s", err)
-		log.Println("generate jwt token: " + errinfo)
-		return c.String(http.StatusInternalServerError, "内部错误!")
-	}
-	log.Println(jwtToken)
-	return c.String(http.StatusOK, jwtToken)
+	return c.String(http.StatusOK, "注册成功")
 }
 
 func verifyEmailFormat(email string) bool {
