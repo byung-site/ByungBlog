@@ -13,5 +13,8 @@ func main() {
 	e.Static("/", "views")
 	e.POST("/login", controller.Login)
 	e.POST("/register", controller.Register)
+	e.POST("/articlesave", controller.SaveArticle)
+	e.POST("/topicadd", controller.AddTopic)
+	e.GET("/gettopics", controller.GetTopics)
 	e.Logger.Fatal(e.Start(":1323"))
 }
