@@ -13,8 +13,9 @@ func main() {
 	e.Static("/", "views")
 	e.POST("/login", controller.Login)
 	e.POST("/register", controller.Register)
-	e.POST("/articlesave", controller.SaveArticle)
-	e.POST("/topicadd", controller.AddTopic)
+	e.POST("/savearticle", controller.SaveArticle)
+	e.POST("/addtopic", controller.AddTopic)
+	e.POST("/deltopic", controller.DeleteTopic)
 	e.GET("/gettopics", controller.GetTopics)
 	e.Logger.Fatal(e.Start(":1323"))
 }

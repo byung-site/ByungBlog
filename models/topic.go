@@ -12,3 +12,7 @@ func SaveTopic(topic *Topic) error {
 func QueryTopics() (topics []*Topic, err error) {
 	return topics, db.Find(&topics).Error
 }
+
+func DeleteTopicById(id int) error {
+	return db.Delete(&Topic{}, "id=?", id).Error
+}
