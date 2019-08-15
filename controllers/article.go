@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo"
 )
 
+//保存文章
 func SaveArticle(c echo.Context) error {
 	key := c.FormValue("key")
 	userId := c.FormValue("userId")
@@ -52,6 +53,55 @@ func SaveArticle(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
+//得到所有文章
+func GetArticles(c echo.Context) error {
+	articles, err := models.QueryAllArticles()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "查询文章失败！")
+	}
+
+	return c.JSON(http.StatusOK, articles)
+}
+
+//按key查询文章
+func GetArticle(c echo.Context) error {
+	key := c.Param("key")
+
+	article, err := models.QueryArticleByKey(key)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "查询文章失败！")
+	}
+	return c.JSON(http.StatusOK, article)
+}
+
+//得到最热文章
+func GetHottestArticle(c echo.Context) error {
+	articles, err := models.QueryHottestArticle()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "得到最热文章失败！")
+	}
+
+	return c.JSON(http.StatusOK, articles)
+
+}
+
+//得到最新文章
+func GetNewestArticle(c echo.Context) error {
+	articles, err := models.QueryNewestArticle()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "得到最新文章失败！")
+	}
+
+	return c.JSON(http.StatusOK, articles)
+
+}
+
+//删除文章
 func DeleteArticle(c echo.Context) error {
-	return nil
+	key := c.FormValue("key")
+
+	if err := models.DeleteArticleByKey(key); err != nil {
+		return c.String(http.StatusInternalServerError, "删除文章失败！")
+	}
+	return c.String(http.StatusOK, "删除文章成功!")
 }

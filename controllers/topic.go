@@ -18,8 +18,9 @@ func AddTopic(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
+//得到所有话题
 func GetTopics(c echo.Context) error {
-	topics, err := models.QueryTopics()
+	topics, err := models.QueryAllTopics()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "查询话题失败")
 	}

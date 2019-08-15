@@ -15,10 +15,32 @@ type Article struct {
 	Publish int    `gorm:"default:0"`
 }
 
+//保存文章
 func SaveArticle(article *Article) error {
 	return db.Save(article).Error
 }
 
+//查询指定key的文章
 func QueryArticleByKey(key string) (article Article, err error) {
 	return article, db.Where("key=?", key).Take(&article).Error
+}
+
+//查询所有文章
+func QueryAllArticles() (articles []*Article, err error) {
+	return articles, db.Find(&articles).Order("create_at").Error
+}
+
+//查询最热的10篇文章
+func QueryHottestArticle() (articles []*Article, err error) {
+	return articles, db.Limit(10).Find(&articles).Order("visit").Error
+}
+
+//查询最新的10篇文章
+func QueryNewestArticle() (articles []*Article, err error) {
+	return articles, db.Limit(10).Find(&articles).Order("create_at").Error
+}
+
+//删除文章
+func DeleteArticleByKey(key string) error {
+	return db.Delete(&Article{}, "key=?", key).Error
 }
