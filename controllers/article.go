@@ -13,7 +13,6 @@ import (
 func SaveArticle(c echo.Context) error {
 	key := c.FormValue("key")
 	userId := c.FormValue("userId")
-	topicId := c.FormValue("topicId")
 	title := c.FormValue("title")
 	summary := c.FormValue("summary")
 	content := c.FormValue("content")
@@ -23,7 +22,6 @@ func SaveArticle(c echo.Context) error {
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
-	topicIdInt, _ := strconv.Atoi(topicId)
 
 	var a models.Article
 	article, err := models.QueryArticleByKey(key)
@@ -32,7 +30,6 @@ func SaveArticle(c echo.Context) error {
 		if err == gorm.ErrRecordNotFound {
 			a = models.Article{
 				UserID:  userIdInt,
-				TopicID: topicIdInt,
 				Key:     key,
 				Title:   title,
 				Summary: summary,
@@ -94,6 +91,18 @@ func GetNewestArticle(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, articles)
 
+}
+
+func GetArticleByTopicID(c echo.Context) error {
+	topicIdStr := c.Param("id")
+	topicId, _ := strconv.Atoi(topicIdStr)
+
+	articles, err := models.QueryArticlesByTopicID(uint(topicId))
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "得到最文章失败！")
+	}
+
+	return c.JSON(http.StatusOK, articles)
 }
 
 //删除文章

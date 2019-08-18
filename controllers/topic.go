@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"byung-cn/byung/models"
 	"net/http"
 	"strconv"
@@ -20,14 +21,42 @@ func AddTopic(c echo.Context) error {
 
 //得到所有话题
 func GetTopics(c echo.Context) error {
-	topics, err := models.QueryAllTopics()
+	var topicArray []*models.Topic
+
+	topics, err := models.QueryTopics()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "查询话题失败")
 	}
 
-	return c.JSON(http.StatusOK, topics)
+	var itemCount int
+	var count int
+	for index, _ := range topics {
+		var buffer bytes.Buffer
+
+		itemCount, err = models.QueryArticleCountByTopicID(topics[index].ID)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "查询话题失败")
+		}
+		itemCountStr := strconv.Itoa(itemCount)
+		buffer.WriteString(topics[index].Name)
+		buffer.WriteString("(")
+		buffer.WriteString(itemCountStr)
+		buffer.WriteString(")")
+		topics[index].Name = buffer.String()
+
+		count += itemCount
+	}
+
+	firstTopic := &models.Topic{
+		Name: "全部",
+	}
+
+	topicArray = append(topicArray, firstTopic)
+	topicArray = append(topicArray, topics...)
+	return c.JSON(http.StatusOK, topicArray)
 }
 
+//删除话题
 func DeleteTopic(c echo.Context) error {
 	topicId := c.FormValue("topicId")
 

@@ -6,7 +6,6 @@ type Article struct {
 	UserID  int
 	TopicID int
 	User    User
-	Topic   Topic
 	Title   string `gorm:"type:character varying(200)"`
 	Summary string `gorm:"type:character varying(800)"`
 	Content string `gorm:"type:text"`
@@ -23,6 +22,16 @@ func SaveArticle(article *Article) error {
 //查询指定key的文章
 func QueryArticleByKey(key string) (article Article, err error) {
 	return article, db.Where("key=?", key).Take(&article).Error
+}
+
+//查询指定topicid的文章
+func QueryArticlesByTopicID(topicid uint) (article []*Article, err error) {
+	return article, db.Where("topic_id=?", topicid).Take(&article).Error
+}
+
+//查询指定topicid的文章数
+func QueryArticleCountByTopicID(topicid uint) (count int, err error) {
+	return count, db.Table("articles").Where("topic_id=?", topicid).Count(&count).Error
 }
 
 //查询所有文章

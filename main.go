@@ -16,14 +16,13 @@ func main() {
 	e.POST("/register", controller.Register)
 	//article
 	e.POST("/savearticle", controller.SaveArticle)
-	e.GET("/getarticles", controller.GetArticles)
-	e.GET("/getarticle/:key", controller.GetArticle)
-	e.GET("/getnewestarticle", controller.GetNewestArticle)
-	e.GET("/gethottestarticle", controller.GetHottestArticle)
-	e.POST("/delarticle", controller.DeleteArticle)
+	e.GET("/getArticles", controller.GetArticles)
+	e.GET("/getArticle/:key", controller.GetArticle)
+	e.GET("/getNewest", controller.GetNewestArticle)
+	e.GET("/getHottest", controller.GetHottestArticle)
+	e.GET("/getArticleByTopicID/:id", controller.GetArticleByTopicID)
+	e.POST("/delArticle", controller.DeleteArticle)
 	//topic
-	e.POST("/addtopic", controller.AddTopic)
-	e.POST("/deltopic", controller.DeleteTopic)
-	e.GET("/gettopics", controller.GetTopics)
+	e.GET("/getTopics", controller.GetTopics)
 	e.Logger.Fatal(e.Start(":1323"))
 }
