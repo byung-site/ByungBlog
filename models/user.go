@@ -2,11 +2,11 @@ package models
 
 type User struct {
 	Model
-	Nickname string `gorm:"unique_index" json:"nickname"`
-	Email    string `gorm:"unique_index" json:"email"`
-	Avatar   string `json:"avatar"`
+	Nickname string `gorm:"unique_index"`
+	Email    string `gorm:"unique_index""`
+	Avatar   string
 	Password string `json:"-"`
-	Role     int    `gorm:"default:0" json:"role"` // 0 管理员 1正常用户
+	Role     int    `gorm:"default:0"` // 0 管理员 1正常用户
 }
 
 func QueryUserByEmailAndPassword(email, password string) (user User, err error) {

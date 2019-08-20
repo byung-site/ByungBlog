@@ -25,8 +25,8 @@ func QueryArticleByKey(key string) (article Article, err error) {
 }
 
 //查询指定topicid的文章
-func QueryArticlesByTopicID(topicid uint) (article []*Article, err error) {
-	return article, db.Where("topic_id=?", topicid).Take(&article).Error
+func QueryArticlesByTopicID(topicid uint) (articles []*Article, err error) {
+	return articles, db.Where("topic_id=?", topicid).Find(&articles).Error
 }
 
 //查询指定topicid的文章数

@@ -20,7 +20,7 @@ func main() {
 	e.GET("/getArticle/:key", controller.GetArticle)
 	e.GET("/getNewest", controller.GetNewestArticle)
 	e.GET("/getHottest", controller.GetHottestArticle)
-	e.GET("/getArticleByTopicID/:id", controller.GetArticleByTopicID)
+	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
 	e.POST("/delArticle", controller.DeleteArticle)
 	//topic
 	e.GET("/getTopics", controller.GetTopics)

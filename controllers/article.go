@@ -93,7 +93,7 @@ func GetNewestArticle(c echo.Context) error {
 
 }
 
-func GetArticleByTopicID(c echo.Context) error {
+func GetArticlesByTopicID(c echo.Context) error {
 	topicIdStr := c.Param("id")
 	topicId, _ := strconv.Atoi(topicIdStr)
 
