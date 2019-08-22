@@ -10,11 +10,12 @@ import (
 func main() {
 	e := echo.New()
 
-	e.Static("/", "views")
+	e.Static("/", "assets")
 	//user
 	e.POST("/login", controller.Login)
 	e.POST("/register", controller.Register)
 	//article
+	e.GET("/createKey", controller.CreateArticleKey)
 	e.POST("/savearticle", controller.SaveArticle)
 	e.GET("/getArticles", controller.GetArticles)
 	e.GET("/getArticle/:key", controller.GetArticle)
@@ -24,5 +25,9 @@ func main() {
 	e.POST("/delArticle", controller.DeleteArticle)
 	//topic
 	e.GET("/getTopics", controller.GetTopics)
+	//upload
+	e.POST("/uploadImage", controller.UploadImage)
+	//view
+	e.GET("/view/:key/:filename", controller.ViewImage)
 	e.Logger.Fatal(e.Start(":1323"))
 }

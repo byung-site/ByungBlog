@@ -4,8 +4,8 @@ type Article struct {
 	Model
 	Key     string `gorm:"unique_index"`
 	UserID  int
-	TopicID int
 	User    User
+	TopicID int
 	Title   string `gorm:"type:character varying(200)"`
 	Summary string `gorm:"type:character varying(800)"`
 	Content string `gorm:"type:text"`

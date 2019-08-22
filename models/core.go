@@ -30,4 +30,5 @@ func init() {
 	db.AutoMigrate(&Article{})
 	db.AutoMigrate(&Topic{})
 	db.AutoMigrate(&Comment{})
+	db.AutoMigrate(&Image{})
 }

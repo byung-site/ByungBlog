@@ -7,7 +7,14 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
+	uuid "github.com/satori/go.uuid"
 )
+
+//生成key
+func CreateArticleKey(c echo.Context) error {
+	uuidv4 := uuid.NewV4()
+	return c.JSON(http.StatusOK, uuidv4)
+}
 
 //保存文章
 func SaveArticle(c echo.Context) error {
