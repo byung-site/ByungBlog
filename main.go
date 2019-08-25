@@ -18,11 +18,13 @@ func main() {
 	e.GET("/createKey", controller.CreateArticleKey)
 	e.POST("/savearticle", controller.SaveArticle)
 	e.GET("/getArticles", controller.GetArticles)
+	e.GET("/getPublish", controller.GetPublishArticles)
 	e.GET("/getArticle/:key", controller.GetArticle)
 	e.GET("/getNewest", controller.GetNewestArticle)
 	e.GET("/getHottest", controller.GetHottestArticle)
 	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
 	e.POST("/delArticle", controller.DeleteArticle)
+	e.POST("/publish", controller.PublishArticle)
 	//topic
 	e.GET("/getTopics", controller.GetTopics)
 	//upload

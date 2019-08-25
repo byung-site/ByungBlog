@@ -16,7 +16,7 @@ func CreateArticleKey(c echo.Context) error {
 	return c.JSON(http.StatusOK, uuidv4)
 }
 
-//保存文章
+//保存或更新文章
 func SaveArticle(c echo.Context) error {
 	key := c.FormValue("key")
 	userId := c.FormValue("userId")
@@ -67,6 +67,16 @@ func GetArticles(c echo.Context) error {
 	return c.JSON(http.StatusOK, articles)
 }
 
+//得到发布的文章
+func GetPublishArticles(c echo.Context) error {
+	articles, err := models.QueryPublishArticles()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "查询文章失败！")
+	}
+
+	return c.JSON(http.StatusOK, articles)
+}
+
 //按key查询文章
 func GetArticle(c echo.Context) error {
 	key := c.Param("key")
@@ -98,6 +108,25 @@ func GetNewestArticle(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, articles)
 
+}
+
+//发布文章
+func PublishArticle(c echo.Context) error {
+	key := c.FormValue("key")
+
+	article, err := models.QueryArticleByKey(key)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "发布失败！")
+	}
+	if article.Publish == 1 {
+		return c.String(http.StatusOK, "文章已发布！")
+	}
+
+	article.Publish = 1
+	if err = models.SaveArticle(&article); err != nil {
+		return c.String(http.StatusInternalServerError, "发布失败！")
+	}
+	return c.String(http.StatusOK, "发布成功！")
 }
 
 func GetArticlesByTopicID(c echo.Context) error {
