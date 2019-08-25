@@ -39,9 +39,9 @@ func QueryAllArticles() (articles []*Article, err error) {
 	return articles, db.Order("created_at").Find(&articles).Error
 }
 
-//查询所有文章
+//查询所有发布的文章
 func QueryPublishArticles() (articles []*Article, err error) {
-	return articles, db.Where("publish = ?", 1).Find(&articles).Order("create_at").Error
+	return articles, db.Where("publish = ?", 1).Order("created_at").Find(&articles).Error
 }
 
 //查询最热的10篇文章
@@ -51,7 +51,7 @@ func QueryHottestArticle() (articles []*Article, err error) {
 
 //查询最新的10篇文章
 func QueryNewestArticle() (articles []*Article, err error) {
-	return articles, db.Limit(10).Where("publish=?", 1).Order("create_at").Find(&articles).Error
+	return articles, db.Limit(10).Where("publish=?", 1).Order("created_at").Find(&articles).Error
 }
 
 //删除文章

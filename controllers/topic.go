@@ -21,8 +21,6 @@ func AddTopic(c echo.Context) error {
 
 //得到所有话题
 func GetTopics(c echo.Context) error {
-	var topicArray []*models.Topic
-
 	topics, err := models.QueryTopics()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "查询话题失败")
@@ -47,13 +45,7 @@ func GetTopics(c echo.Context) error {
 		count += itemCount
 	}
 
-	firstTopic := &models.Topic{
-		Name: "全部",
-	}
-
-	topicArray = append(topicArray, firstTopic)
-	topicArray = append(topicArray, topics...)
-	return c.JSON(http.StatusOK, topicArray)
+	return c.JSON(http.StatusOK, topics)
 }
 
 //删除话题

@@ -16,6 +16,53 @@ func CreateArticleKey(c echo.Context) error {
 	return c.JSON(http.StatusOK, uuidv4)
 }
 
+//保存同时发布文章
+func SaveAndPublishArticle(c echo.Context) error {
+	key := c.FormValue("key")
+	userId := c.FormValue("userId")
+	topicId := c.FormValue("topicId")
+	title := c.FormValue("title")
+	summary := c.FormValue("summary")
+	content := c.FormValue("content")
+
+	if title == "" || content == "" {
+		return c.String(http.StatusInternalServerError, "标题或内容不能为空！")
+	}
+
+	userIdInt, _ := strconv.Atoi(userId)
+	topicIdInt, _ := strconv.Atoi(topicId)
+
+	var a models.Article
+	article, err := models.QueryArticleByKey(key)
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			a = models.Article{
+				UserID:  userIdInt,
+				TopicID: topicIdInt,
+				Key:     key,
+				Title:   title,
+				Summary: summary,
+				Content: content,
+			}
+		} else {
+			return c.String(http.StatusInternalServerError, "保存失败！")
+		}
+	} else {
+		article.Title = title
+		article.Content = content
+		article.TopicID = topicIdInt
+		article.Summary = summary
+		a = article
+	}
+
+	a.Publish = 1
+	if err = models.SaveArticle(&a); err != nil {
+		return c.String(http.StatusInternalServerError, "保存失败！")
+	}
+	return c.String(http.StatusOK, "ok")
+}
+
 //保存或更新文章
 func SaveArticle(c echo.Context) error {
 	key := c.FormValue("key")
@@ -84,6 +131,10 @@ func GetArticle(c echo.Context) error {
 	article, err := models.QueryArticleByKey(key)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "查询文章失败！")
+	}
+	article.User, err = models.QueryUserById(article.UserID)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "查询文章用户失败！")
 	}
 	return c.JSON(http.StatusOK, article)
 }

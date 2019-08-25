@@ -21,6 +21,10 @@ func QueryUserByEmail(email string) (user User, err error) {
 	return user, db.Where("email = ?", email).Take(&user).Error
 }
 
+func QueryUserById(id int) (user User, err error) {
+	return user, db.Where("id = ?", id).Take(&user).Error
+}
+
 func SaveUser(user *User) error {
 	return db.Save(user).Error
 }
