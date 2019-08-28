@@ -114,6 +114,19 @@ func GetArticles(c echo.Context) error {
 	return c.JSON(http.StatusOK, articles)
 }
 
+//得到指定用户ID的所有文章
+func GetArticlesByUserID(c echo.Context) error {
+	userIdStr := c.Param("userid")
+	userId, _ := strconv.Atoi(userIdStr)
+
+	articles, err := models.QueryArticlesByUserID(uint(userId))
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "查询文章失败！")
+	}
+
+	return c.JSON(http.StatusOK, articles)
+}
+
 //得到发布的文章
 func GetPublishArticles(c echo.Context) error {
 	articles, err := models.QueryPublishArticles()

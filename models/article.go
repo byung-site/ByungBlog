@@ -29,9 +29,14 @@ func QueryArticlesByTopicID(topicid uint) (articles []*Article, err error) {
 	return articles, db.Where("topic_id=?", topicid).Find(&articles).Error
 }
 
+//查询指定userid的文章
+func QueryArticlesByUserID(userid uint) (articles []*Article, err error) {
+	return articles, db.Where("user_id=?", userid).Find(&articles).Error
+}
+
 //查询指定topicid的文章数
 func QueryArticleCountByTopicID(topicid uint) (count int, err error) {
-	return count, db.Table("articles").Where("topic_id=?", topicid).Count(&count).Error
+	return count, db.Table("articles").Where("topic_id=? and deleted_at IS NULL", topicid).Count(&count).Error
 }
 
 //查询所有文章

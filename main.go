@@ -27,6 +27,7 @@ func main() {
 	e.GET("/getNewest", controller.GetNewestArticle)
 	e.GET("/getHottest", controller.GetHottestArticle)
 	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
+	e.GET("/getArticlesByUserID/:userid", controller.GetArticlesByUserID)
 	e.POST("/delArticle", controller.DeleteArticle)
 	e.POST("/publish", controller.PublishArticle)
 	e.POST("/saveAndPublish", controller.SaveAndPublishArticle)
