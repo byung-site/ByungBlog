@@ -20,8 +20,8 @@ type (
 		pnames        []string
 		methodHandler *methodHandler
 	}
-	kind uint8
-	children []*node
+	kind          uint8
+	children      []*node
 	methodHandler struct {
 		connect  HandlerFunc
 		delete   HandlerFunc
@@ -33,7 +33,6 @@ type (
 		propfind HandlerFunc
 		put      HandlerFunc
 		trace    HandlerFunc
-		report   HandlerFunc
 	}
 )
 
@@ -58,7 +57,7 @@ func NewRouter(e *Echo) *Router {
 func (r *Router) Add(method, path string, h HandlerFunc) {
 	// Validate path
 	if path == "" {
-		path = "/"
+		panic("echo: path cannot be empty")
 	}
 	if path[0] != '/' {
 		path = "/" + path
@@ -80,13 +79,14 @@ func (r *Router) Add(method, path string, h HandlerFunc) {
 
 			if i == l {
 				r.insert(method, path[:i], h, pkind, ppath, pnames)
-			} else {
-				r.insert(method, path[:i], nil, pkind, "", nil)
+				return
 			}
+			r.insert(method, path[:i], nil, pkind, "", nil)
 		} else if path[i] == '*' {
 			r.insert(method, path[:i], nil, skind, "", nil)
 			pnames = append(pnames, "*")
 			r.insert(method, path[:i+1], h, akind, ppath, pnames)
+			return
 		}
 	}
 
@@ -248,8 +248,6 @@ func (n *node) addHandler(method string, h HandlerFunc) {
 		n.methodHandler.put = h
 	case http.MethodTrace:
 		n.methodHandler.trace = h
-	case REPORT:
-		n.methodHandler.report = h
 	}
 }
 
@@ -275,8 +273,6 @@ func (n *node) findHandler(method string) HandlerFunc {
 		return n.methodHandler.put
 	case http.MethodTrace:
 		return n.methodHandler.trace
-	case REPORT:
-		return n.methodHandler.report
 	default:
 		return nil
 	}
@@ -336,14 +332,10 @@ func (r *Router) Find(method, path string, c Context) {
 			}
 		}
 
-
 		if l == pl {
 			// Continue search
 			search = search[l:]
 		} else {
-			if nn == nil { // Issue #1348
-				return // Not found
-			}
 			cn = nn
 			search = ns
 			if nk == pkind {
@@ -351,6 +343,8 @@ func (r *Router) Find(method, path string, c Context) {
 			} else if nk == akind {
 				goto Any
 			}
+			// Not found
+			return
 		}
 
 		if search == "" {
@@ -400,9 +394,6 @@ func (r *Router) Find(method, path string, c Context) {
 			if nn != nil {
 				cn = nn
 				nn = cn.parent // Next (Issue #954)
-				if nn != nil {
-					nk = nn.kind
-				}
 				search = ns
 				if nk == pkind {
 					goto Param
@@ -410,7 +401,8 @@ func (r *Router) Find(method, path string, c Context) {
 					goto Any
 				}
 			}
-			return // Not found
+			// Not found
+			return
 		}
 		pvalues[len(cn.pnames)-1] = search
 		break

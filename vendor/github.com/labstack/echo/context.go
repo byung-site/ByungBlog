@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 )
 
 type (
@@ -25,9 +24,6 @@ type (
 
 		// SetRequest sets `*http.Request`.
 		SetRequest(r *http.Request)
-
-		// SetResponse sets `*Response`.
-		SetResponse(r *Response)
 
 		// Response returns `*Response`.
 		Response() *Response
@@ -202,7 +198,6 @@ type (
 		handler  HandlerFunc
 		store    Map
 		echo     *Echo
-		lock     sync.RWMutex
 	}
 )
 
@@ -231,17 +226,13 @@ func (c *context) Response() *Response {
 	return c.response
 }
 
-func (c *context) SetResponse(r *Response) {
-	c.response = r
-}
-
 func (c *context) IsTLS() bool {
 	return c.request.TLS != nil
 }
 
 func (c *context) IsWebSocket() bool {
 	upgrade := c.request.Header.Get(HeaderUpgrade)
-	return strings.ToLower(upgrade) == "websocket"
+	return upgrade == "websocket" || upgrade == "Websocket"
 }
 
 func (c *context) Scheme() string {
@@ -369,15 +360,10 @@ func (c *context) Cookies() []*http.Cookie {
 }
 
 func (c *context) Get(key string) interface{} {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
 	return c.store[key]
 }
 
 func (c *context) Set(key string, val interface{}) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
 	if c.store == nil {
 		c.store = make(Map)
 	}
@@ -444,7 +430,7 @@ func (c *context) json(code int, i interface{}, indent string) error {
 		enc.SetIndent("", indent)
 	}
 	c.writeContentType(MIMEApplicationJSONCharsetUTF8)
-	c.response.Status = code
+	c.response.WriteHeader(code)
 	return enc.Encode(i)
 }
 
@@ -611,3 +597,4 @@ func (c *context) Reset(r *http.Request, w http.ResponseWriter) {
 	// NOTE: Don't reset because it has to have length c.echo.maxParam at all times
 	// c.pvalues = nil
 }
+

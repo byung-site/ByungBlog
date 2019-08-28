@@ -14,6 +14,10 @@ func main() {
 	//user
 	e.POST("/login", controller.Login)
 	e.POST("/register", controller.Register)
+	e.POST("/changeNickname", controller.ChangeNickname)
+	e.POST("/changeEmail", controller.ChangeEmail)
+	e.POST("/changePassword", controller.ChangePassword)
+	e.POST("/changeAvatar/:userid", controller.ChangeAvatar)
 	//article
 	e.GET("/createKey", controller.CreateArticleKey)
 	e.POST("/saveArticle", controller.SaveArticle)
@@ -32,5 +36,6 @@ func main() {
 	e.POST("/uploadImage", controller.UploadImage)
 	//view
 	e.GET("/view/:key/:filename", controller.ViewImage)
-	e.Logger.Fatal(e.Start(":80"))
+	e.GET("/getAvatar/:userId/:filename", controller.GetAvatar)
+	e.Logger.Fatal(e.Start(":5678"))
 }
