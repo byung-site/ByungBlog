@@ -4,6 +4,7 @@ import (
 	"byung-cn/byung/models"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -77,7 +78,7 @@ func Register(c echo.Context) error {
 	if passLen := len(password); passLen < 8 {
 		return c.String(http.StatusInternalServerError, "密码要求8位以上")
 	}
-	log.Println(password, " ", confirm)
+
 	if strings.Compare(password, confirm) != 0 {
 		return c.String(http.StatusInternalServerError, "密码不一致!")
 	}
@@ -94,10 +95,13 @@ func Register(c echo.Context) error {
 		Avatar:   "defaultavatar.jpeg",
 		Role:     1,
 	}
+
 	if err := models.SaveUser(user); err != nil {
 		return c.String(http.StatusInternalServerError, "用户注册失败!")
 	}
 
+	*user, _ = models.QueryUserByEmail(user.Email)
+	createDefaultAvatar(user.ID)
 	return c.String(http.StatusOK, "注册成功")
 }
 
@@ -318,4 +322,32 @@ func getJWTToken(user *models.User) (string, error) {
 
 	//Generate encoded token and send it as response.
 	return token.SignedString([]byte("1qaz@WSX@@@"))
+}
+
+func createDefaultAvatar(userId uint) error {
+	if userId == 0 {
+		return errors.New("user ID cannot be 0")
+	}
+
+	avatarDir := fmt.Sprintf("assets/avatar/%d", userId)
+	if err := os.MkdirAll(avatarDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	copyFile(avatarDir+"/defaultavatar.jpeg", "assets/avatar/defaultavatar.jpeg")
+	return nil
+}
+
+func copyFile(dstName, srcName string) (written int64, err error) {
+	src, err := os.Open(srcName)
+	if err != nil {
+		return
+	}
+	defer src.Close()
+	dst, err := os.OpenFile(dstName, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return
+	}
+	defer dst.Close()
+	return io.Copy(dst, src)
 }
