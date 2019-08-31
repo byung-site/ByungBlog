@@ -1,11 +1,13 @@
-module byung-cn/byung
+module byung
 
 go 1.12
 
 require (
 	github.com/bmizerany/pq v0.0.0-20131128184720-da2b95e392c1
+	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/jinzhu/gorm v1.9.10
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/satori/go.uuid v1.2.0

@@ -9,6 +9,6 @@ type Image struct {
 	ArticleKey string
 }
 
-func saveImage(image *Image) error {
+func SaveImage(image *Image) error {
 	return db.Save(image).Error
 }

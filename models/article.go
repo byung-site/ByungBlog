@@ -6,6 +6,7 @@ type Article struct {
 	UserID  int
 	User    User
 	TopicID int
+	Image   string
 	Title   string `gorm:"type:character varying(200)"`
 	Summary string `gorm:"type:character varying(800)"`
 	Content string `gorm:"type:text"`
@@ -26,12 +27,12 @@ func QueryArticleByKey(key string) (article Article, err error) {
 
 //查询指定topicid的文章
 func QueryArticlesByTopicID(topicid uint) (articles []*Article, err error) {
-	return articles, db.Where("topic_id=?", topicid).Find(&articles).Error
+	return articles, db.Where("topic_id=?", topicid).Order("created_at").Preload("User").Find(&articles).Error
 }
 
 //查询指定userid的文章
 func QueryArticlesByUserID(userid uint) (articles []*Article, err error) {
-	return articles, db.Where("user_id=?", userid).Find(&articles).Error
+	return articles, db.Where("user_id=?", userid).Order("created_at").Preload("User").Find(&articles).Error
 }
 
 //查询指定topicid的文章数
@@ -41,22 +42,22 @@ func QueryArticleCountByTopicID(topicid uint) (count int, err error) {
 
 //查询所有文章
 func QueryAllArticles() (articles []*Article, err error) {
-	return articles, db.Order("created_at").Find(&articles).Error
+	return articles, db.Order("created_at").Preload("User").Find(&articles).Error
 }
 
 //查询所有发布的文章
 func QueryPublishArticles() (articles []*Article, err error) {
-	return articles, db.Where("publish = ?", 1).Order("created_at").Find(&articles).Error
+	return articles, db.Where("publish = ?", 1).Order("created_at").Preload("User").Find(&articles).Error
 }
 
 //查询最热的10篇文章
 func QueryHottestArticle() (articles []*Article, err error) {
-	return articles, db.Limit(10).Where("publish=?", 1).Order("visit").Find(&articles).Error
+	return articles, db.Limit(10).Where("publish=?", 1).Order("visit").Preload("User").Find(&articles).Error
 }
 
 //查询最新的10篇文章
 func QueryNewestArticle() (articles []*Article, err error) {
-	return articles, db.Limit(10).Where("publish=?", 1).Order("created_at").Find(&articles).Error
+	return articles, db.Limit(10).Where("publish=?", 1).Order("created_at").Preload("User").Find(&articles).Error
 }
 
 //删除文章

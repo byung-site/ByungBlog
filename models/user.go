@@ -25,6 +25,10 @@ func QueryUserById(id int) (user User, err error) {
 	return user, db.Where("id = ?", id).Take(&user).Error
 }
 
+func QueryUserCount() (count int, err error) {
+	return count, db.Table("users").Count(&count).Error
+}
+
 func SaveUser(user *User) error {
 	return db.Save(user).Error
 }

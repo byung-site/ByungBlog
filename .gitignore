@@ -2,3 +2,5 @@
 .vscode/
 views/
 *.swp
+data/*
+log/*

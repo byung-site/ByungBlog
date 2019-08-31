@@ -1,14 +1,58 @@
 package main
 
 import (
-	controller "byung-cn/byung/controllers"
-	_ "byung-cn/byung/models"
+	"byung/config"
+	controller "byung/controllers"
+	"byung/logger"
+	_ "byung/models"
+	"os"
+	"os/signal"
 
 	"github.com/labstack/echo"
 )
 
+func init() {
+
+	uploadsDir := config.Conf.DataDirectory + "/uploads"
+	logDir := config.Conf.DataDirectory + "/logs"
+
+	_, err := os.Stat(uploadsDir)
+	if exist := os.IsExist(err); exist == false {
+		if err = os.MkdirAll(uploadsDir, os.ModePerm); err != nil {
+			logger.Error(err)
+			os.Exit(-1)
+		}
+	} else {
+	}
+
+	_, err = os.Stat(logDir)
+	if exist := os.IsExist(err); exist == false {
+		if err = os.MkdirAll(logDir, os.ModePerm); err != nil {
+			logger.Error(err)
+			os.Exit(-1)
+		}
+	} else {
+	}
+
+	logger.Record(logDir, 30)
+}
+
+func registerSignal() {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	go func() {
+		for _ = range signalChan {
+			logger.Close()
+			os.Exit(1)
+		}
+	}()
+
+}
+
 func main() {
 	e := echo.New()
+
+	registerSignal()
 
 	e.Static("/", "assets")
 	//user
@@ -29,14 +73,18 @@ func main() {
 	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
 	e.GET("/getArticlesByUserID/:userid", controller.GetArticlesByUserID)
 	e.POST("/delArticle", controller.DeleteArticle)
-	e.POST("/publish", controller.PublishArticle)
+	//e.POST("/publish", controller.PublishArticle)
 	e.POST("/saveAndPublish", controller.SaveAndPublishArticle)
+	e.POST("/updateVisit", controller.UpdateVisit)
 	//topic
 	e.GET("/getTopics", controller.GetTopics)
+	e.GET("/getTopicsByUserID/:userId", controller.GetTopicsByUserID)
+	e.POST("/addTopic", controller.AddTopic)
 	//upload
-	e.POST("/uploadImage", controller.UploadImage)
+	e.POST("/uploadArticleImage", controller.UploadArticleImage)
+	e.POST("/uploadArticleAttachImage/:userId/:key", controller.UploadArticleAttachImage)
 	//view
-	e.GET("/view/:key/:filename", controller.ViewImage)
-	e.GET("/getAvatar/:userId/:filename", controller.GetAvatar)
-	e.Logger.Fatal(e.Start(":5678"))
+	e.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
+	e.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
+	e.Logger.Fatal(e.Start(config.Conf.ListenAddress))
 }

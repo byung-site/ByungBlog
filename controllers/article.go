@@ -1,8 +1,12 @@
 package controllers
 
 import (
-	"byung-cn/byung/models"
+	"byung/config"
+	"byung/logger"
+	"byung/models"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/jinzhu/gorm"
@@ -24,8 +28,10 @@ func SaveAndPublishArticle(c echo.Context) error {
 	title := c.FormValue("title")
 	summary := c.FormValue("summary")
 	content := c.FormValue("content")
+	image := c.FormValue("image")
 
 	if title == "" || content == "" {
+		logger.Error("title or content can not be empty")
 		return c.String(http.StatusInternalServerError, "标题或内容不能为空！")
 	}
 
@@ -34,21 +40,28 @@ func SaveAndPublishArticle(c echo.Context) error {
 
 	var a models.Article
 	article, err := models.QueryArticleByKey(key)
-
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
+
 			a = models.Article{
 				UserID:  userIdInt,
 				TopicID: topicIdInt,
 				Key:     key,
+				Image:   image,
 				Title:   title,
 				Summary: summary,
 				Content: content,
 			}
+			if image == "" {
+				newDefaultAttachImage(&a)
+				a.Image = userId + "/" + key + "/" + config.Conf.DefaultArticleAttachImage
+			}
 		} else {
+			logger.Error(err)
 			return c.String(http.StatusInternalServerError, "保存失败！")
 		}
 	} else {
+		article.Image = image
 		article.Title = title
 		article.Content = content
 		article.TopicID = topicIdInt
@@ -58,8 +71,10 @@ func SaveAndPublishArticle(c echo.Context) error {
 
 	a.Publish = 1
 	if err = models.SaveArticle(&a); err != nil {
+		logger.Error(err)
 		return c.String(http.StatusInternalServerError, "保存失败！")
 	}
+	logger.Info("publish or update article: ", a.Title, " ", a.Key)
 	return c.String(http.StatusOK, "ok")
 }
 
@@ -70,8 +85,10 @@ func SaveArticle(c echo.Context) error {
 	title := c.FormValue("title")
 	summary := c.FormValue("summary")
 	content := c.FormValue("content")
+	image := c.FormValue("image")
 
 	if title == "" || content == "" {
+		logger.Error("title or content can not be empty")
 		return c.String(http.StatusInternalServerError, "标题或内容不能为空！")
 	}
 
@@ -79,28 +96,43 @@ func SaveArticle(c echo.Context) error {
 
 	var a models.Article
 	article, err := models.QueryArticleByKey(key)
+	oldAttachImage := article.Image
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			a = models.Article{
 				UserID:  userIdInt,
 				Key:     key,
+				Image:   image,
 				Title:   title,
 				Summary: summary,
 				Content: content,
 			}
+			if image == "" {
+				newDefaultAttachImage(&a)
+				a.Image = userId + "/" + key + "/" + config.Conf.DefaultArticleAttachImage
+			}
 		} else {
+			logger.Error(err)
 			return c.String(http.StatusInternalServerError, "保存失败！")
 		}
 	} else {
+		if image != "" {
+			article.Image = image
+			old := config.Conf.DataDirectory + "/uploads/" + oldAttachImage
+			os.Remove(old)
+		}
 		article.Title = title
+		article.Summary = summary
 		article.Content = content
 		a = article
 	}
 
 	if err = models.SaveArticle(&a); err != nil {
+		logger.Error(err)
 		return c.String(http.StatusInternalServerError, "保存失败！")
 	}
+	logger.Info("save or update article: ", a.Title, " ", a.Key)
 	return c.String(http.StatusOK, "ok")
 }
 
@@ -174,6 +206,7 @@ func GetNewestArticle(c echo.Context) error {
 
 }
 
+/*
 //发布文章
 func PublishArticle(c echo.Context) error {
 	key := c.FormValue("key")
@@ -192,6 +225,7 @@ func PublishArticle(c echo.Context) error {
 	}
 	return c.String(http.StatusOK, "发布成功！")
 }
+*/
 
 func GetArticlesByTopicID(c echo.Context) error {
 	topicIdStr := c.Param("id")
@@ -205,12 +239,44 @@ func GetArticlesByTopicID(c echo.Context) error {
 	return c.JSON(http.StatusOK, articles)
 }
 
+func UpdateVisit(c echo.Context) error {
+	key := c.FormValue("key")
+
+	ret := "更新访问量失败"
+	article, err := models.QueryArticleByKey(key)
+	if err != nil {
+		return ResponseError(c, ret)
+	}
+
+	article.Visit++
+	err = models.SaveArticle(&article)
+	if err != nil {
+		return ResponseError(c, ret)
+	}
+
+	ret = fmt.Sprintf("更新访问量成功(%d)", article.Visit)
+	return ResponseOk(c, ret)
+}
+
 //删除文章
 func DeleteArticle(c echo.Context) error {
 	key := c.FormValue("key")
 
 	if err := models.DeleteArticleByKey(key); err != nil {
+		logger.Error(err)
 		return c.String(http.StatusInternalServerError, "删除文章失败！")
 	}
+	logger.Info("delete article: ", key)
 	return c.String(http.StatusOK, "删除文章成功!")
+}
+
+func newDefaultAttachImage(article *models.Article) error {
+	attachDir := fmt.Sprintf("/uploads/%d/%s/", article.UserID, article.Key)
+	if err := os.MkdirAll(config.Conf.DataDirectory+attachDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	attachImage := attachDir + config.Conf.DefaultArticleAttachImage
+	copyFile(config.Conf.DataDirectory+attachImage, config.Conf.Statics+"/"+config.Conf.DefaultArticleAttachImage)
+	return nil
 }

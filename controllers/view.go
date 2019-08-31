@@ -1,35 +1,44 @@
 package controllers
 
 import (
+	"byung/config"
+	"byung/logger"
 	"net/http"
 	"os"
 
 	"github.com/labstack/echo"
 )
 
-func ViewImage(c echo.Context) error {
+//文章获得图片
+func ViewArticleImage(c echo.Context) error {
+	userId := c.Param("userId")
 	key := c.Param("key")
-	filename := c.Param("filename")
+	filename := c.Param("name")
 
-	file, err := os.Open(UploadDir + "/" + key + "/" + filename)
+	url := config.Conf.DataDirectory + "/uploads/" + userId + "/" + key + "/" + filename
+
+	file, err := os.Open(url)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "failure")
+		logger.Error(err)
+		return c.String(http.StatusInternalServerError, "Fail to open image")
 	}
 	defer file.Close()
 
 	return c.Stream(200, "image/jpeg", file)
 }
 
-func GetAvatar(c echo.Context) error {
+//获得头像
+func ViewAvatar(c echo.Context) error {
 	userId := c.Param("userId")
-	filename := c.Param("filename")
+	filename := c.Param("name")
 
-	file, err := os.Open("assets/avatar/" + userId + "/" + filename)
+	url := config.Conf.DataDirectory + "/uploads/" + userId + "/avatar/" + filename
+	file, err := os.Open(url)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "failure")
+		logger.Error(err)
+		return c.String(http.StatusInternalServerError, "Fail to open image")
 	}
 	defer file.Close()
 
 	return c.Stream(200, "image/jpeg", file)
-
 }

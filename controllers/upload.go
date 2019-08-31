@@ -1,66 +1,118 @@
 package controllers
 
 import (
+	"byung/config"
+	"byung/logger"
 	"io"
-	"net/http"
 	"os"
 
 	"github.com/labstack/echo"
 )
 
-type UploadResult struct {
-	Code    int
-	Message string
-	Url     string
-}
+func UploadArticleImage(c echo.Context) error {
+	result := "图片上传失败"
 
-const UploadDir = "assets/uploads/images"
-
-func UploadImage(c echo.Context) error {
-	var result UploadResult
-
+	userId := c.FormValue("userId")
 	key := c.FormValue("key")
-	file, err := c.FormFile("image")
+	file, err := c.FormFile("file")
 	if err != nil {
-		result.Code = -1
-		result.Message = "图片上传失败"
-		return c.JSON(http.StatusInternalServerError, result)
+		logger.Error(err)
+		return ResponseError(c, result)
+	}
+
+	if userId == "" {
+		logger.Error("user ID can not be empty")
+		return ResponseError(c, result)
+	}
+	if key == "" {
+		logger.Error("key can not be empty")
+		return ResponseError(c, result)
 	}
 
 	src, err := file.Open()
 	if err != nil {
-		result.Code = -1
-		result.Message = "图片上传失败"
-		return c.JSON(http.StatusInternalServerError, result)
+		logger.Error(err)
+		return ResponseError(c, result)
 	}
 	defer src.Close()
 
-	_, err = os.Stat(UploadDir + "/" + key)
-	if exist := os.IsExist(err); exist == false {
-		if err = os.MkdirAll(UploadDir+"/"+key, os.ModePerm); err != nil {
-			result.Code = -1
-			result.Message = "创建目录失败"
-			return c.JSON(http.StatusInternalServerError, result)
+	updir := config.Conf.DataDirectory + "/uploads/" + userId + "/" + key
+	_, err = os.Stat(updir)
+	if os.IsNotExist(err) {
+		logger.Info("mkdir -p  " + updir)
+		if err = os.MkdirAll(updir, os.ModePerm); err != nil {
+			logger.Error(err)
+			return ResponseError(c, result)
 		}
 	}
 	//destination
-	dst, err := os.Create(UploadDir + "/" + key + "/" + file.Filename)
+	dst, err := os.Create(updir + "/" + file.Filename)
 	if err != nil {
-		result.Code = -1
-		result.Message = "图片上传失败"
-		return c.JSON(http.StatusInternalServerError, result)
+		logger.Error(err)
+		return ResponseError(c, result)
 	}
 	defer dst.Close()
 
 	//copy
 	if _, err = io.Copy(dst, src); err != nil {
-		result.Code = -1
-		result.Message = "图片上传失败"
-		return c.JSON(http.StatusInternalServerError, result)
+		logger.Error(err)
+		return ResponseError(c, result)
 	}
 
-	result.Code = 0
-	result.Message = "图片上传成功"
-	result.Url = key + "/" + file.Filename
-	return c.JSON(http.StatusOK, result)
+	url := userId + "/" + key + "/" + file.Filename
+	return ResponseOk(c, url)
+}
+
+func UploadArticleAttachImage(c echo.Context) error {
+	result := "图片上传失败"
+
+	userId := c.Param("userId")
+	key := c.Param("key")
+	file, err := c.FormFile("file")
+	if err != nil {
+		logger.Error(err)
+		return ResponseError(c, result)
+	}
+
+	if userId == "" {
+		logger.Error("user ID can not be empty")
+		return ResponseError(c, result)
+	}
+	if key == "" {
+		logger.Error("key can not be empty")
+		return ResponseError(c, result)
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		logger.Error(err)
+		return ResponseError(c, result)
+	}
+	defer src.Close()
+
+	updir := config.Conf.DataDirectory + "/uploads/" + userId + "/" + key
+	_, err = os.Stat(updir)
+	if os.IsNotExist(err) {
+		logger.Info("mkdir -p  " + updir)
+		if err = os.MkdirAll(updir, os.ModePerm); err != nil {
+			logger.Error(err)
+			return ResponseError(c, result)
+		}
+	}
+	//destination
+	dst, err := os.Create(updir + "/" + file.Filename)
+	if err != nil {
+		logger.Error(err)
+		return ResponseError(c, result)
+	}
+	defer dst.Close()
+
+	//copy
+	if _, err = io.Copy(dst, src); err != nil {
+		logger.Error(err)
+		return ResponseError(c, result)
+	}
+
+	url := userId + "/" + key + "/" + file.Filename
+	return ResponseOk(c, url)
 }
