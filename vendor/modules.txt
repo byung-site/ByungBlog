@@ -1,0 +1,35 @@
+# github.com/bmizerany/pq v0.0.0-20131128184720-da2b95e392c1
+github.com/bmizerany/pq
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+github.com/dgrijalva/jwt-go
+# github.com/jinzhu/gorm v1.9.10
+github.com/jinzhu/gorm
+# github.com/jinzhu/inflection v1.0.0
+github.com/jinzhu/inflection
+# github.com/labstack/echo v3.3.10+incompatible
+github.com/labstack/echo
+# github.com/labstack/gommon v0.3.0
+github.com/labstack/gommon/color
+github.com/labstack/gommon/log
+# github.com/mattn/go-colorable v0.1.2
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.9
+github.com/mattn/go-isatty
+# github.com/satori/go.uuid v1.2.0
+github.com/satori/go.uuid
+# github.com/valyala/bytebufferpool v1.0.0
+github.com/valyala/bytebufferpool
+# github.com/valyala/fasttemplate v1.0.1
+github.com/valyala/fasttemplate
+# golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+golang.org/x/crypto/acme/autocert
+golang.org/x/crypto/acme
+# golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7
+golang.org/x/net/idna
+# golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
+golang.org/x/sys/unix
+# golang.org/x/text v0.3.2
+golang.org/x/text/secure/bidirule
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+golang.org/x/text/transform

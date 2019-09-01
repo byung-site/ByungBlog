@@ -1,0 +1,9 @@
+{
+	"DataDirectory":"./data",
+	"ListenAddress":":5678",
+	"Https":false,
+	"Statics":"./statics",
+	"DefaultAvatar":"defaultavatar.jpeg",
+	"DefaultArticleAttachImage":"defaultattach.jpg",
+	"MaxUsers":1
+}

@@ -12,9 +12,9 @@ var (
 )
 
 type Model struct {
-	ID        uint       `gorm:"primary_key"`
-	CreatedAt time.Time  `json:"-"`
-	UpdatedAt time.Time  `json:"-"`
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	DeletedAt *time.Time `json:"-"`
 }
 
@@ -29,5 +29,5 @@ func init() {
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&Article{})
 	db.AutoMigrate(&Topic{})
-	db.AutoMigrate(&Comment{})
+	db.AutoMigrate(&Image{})
 }
