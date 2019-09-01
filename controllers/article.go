@@ -261,12 +261,22 @@ func UpdateVisit(c echo.Context) error {
 //删除文章
 func DeleteArticle(c echo.Context) error {
 	key := c.FormValue("key")
+	topicId := c.FormValue("topicId")
 
 	if err := models.DeleteArticleByKey(key); err != nil {
 		logger.Error(err)
 		return c.String(http.StatusInternalServerError, "删除文章失败！")
 	}
 	logger.Info("delete article: ", key)
+
+	topicIdInt, err := strconv.Atoi(topicId)
+	if err == nil {
+		count, err := models.QueryArticleCountByTopicID(uint(topicIdInt))
+		if err == nil && count == 0 {
+			models.DeleteTopicById(topicIdInt)
+			logger.Info("delete topic: id is ", topicIdInt)
+		}
+	}
 	return c.String(http.StatusOK, "删除文章成功!")
 }
 
