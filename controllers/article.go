@@ -117,7 +117,7 @@ func SaveArticle(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "保存失败！")
 		}
 	} else {
-		if image != "" {
+		if image != "" && article.Image != image {
 			article.Image = image
 			old := config.Conf.DataDirectory + "/uploads/" + oldAttachImage
 			os.Remove(old)

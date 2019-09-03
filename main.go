@@ -54,7 +54,7 @@ func main() {
 
 	registerSignal()
 
-	e.Static("/", "assets")
+	e.Static("/", "build")
 	//user
 	e.POST("/login", controller.Login)
 	e.POST("/register", controller.Register)
