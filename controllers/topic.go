@@ -32,9 +32,10 @@ func AddTopic(c echo.Context) error {
 			return ResponseOk(c, "新建话题失败")
 		}
 
+		logger.Infof("added \"%s\" topic, id=%d\n", name, topic.ID)
 		return ResponseOk(c, topic.ID)
 	}
-	logger.Error("话题已存在")
+	logger.Infof("\"%s\" topic aready exist\n", name)
 	return ResponseError(c, "话题已存在")
 }
 

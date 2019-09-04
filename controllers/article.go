@@ -61,6 +61,13 @@ func SaveAndPublishArticle(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "保存失败！")
 		}
 	} else {
+		if err == nil {
+			count, err := models.QueryArticleCountByTopicID(uint(article.TopicID))
+			if err == nil && count == 0 {
+				models.DeleteTopicById(topicIdInt)
+				logger.Info("delete topic: id is ", topicIdInt)
+			}
+		}
 		article.Image = image
 		article.Title = title
 		article.Content = content
