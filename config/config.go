@@ -9,6 +9,7 @@ import (
 type Config struct {
 	DataDirectory             string
 	ListenAddress             string
+	CertPath                  string
 	Https                     bool
 	Statics                   string
 	DefaultAvatar             string

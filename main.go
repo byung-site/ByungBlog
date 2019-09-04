@@ -9,6 +9,7 @@ import (
 	"os/signal"
 
 	"github.com/labstack/echo"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 func init() {
@@ -90,6 +91,7 @@ func main() {
 	if config.Conf.Https == false {
 		e.Logger.Fatal(e.Start(config.Conf.ListenAddress))
 	} else if config.Conf.Https == true {
+		e.AutoTLSManager.Cache = autocert.DirCache(config.Conf.CertPath)
 		e.Logger.Fatal(e.StartAutoTLS(config.Conf.ListenAddress))
 	} else {
 		e.Logger.Fatal("configure error")
