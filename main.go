@@ -86,5 +86,12 @@ func main() {
 	//view
 	e.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
 	e.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
-	e.Logger.Fatal(e.Start(config.Conf.ListenAddress))
+
+	if config.Conf.Https == false {
+		e.Logger.Fatal(e.Start(config.Conf.ListenAddress))
+	} else if config.Conf.Https == true {
+		e.Logger.Fatal(e.StartAutoTLS(config.Conf.ListenAddress))
+	} else {
+		e.Logger.Fatal("configure error")
+	}
 }
