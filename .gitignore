@@ -1,6 +1,6 @@
 .DS_Store
 .vscode/
-views/
+build/
 *.swp
 data/*
 log/*
