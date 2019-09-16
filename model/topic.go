@@ -2,8 +2,9 @@ package model
 
 type Topic struct {
 	Model
-	UserId int
-	Name   string `gorm:"type:character varying(100)"`
+	UserID     uint
+	Name       string `gorm:"type:character varying(100)"`
+	ArticleNum int    `gorm:-`
 }
 
 //添加或更新话题
@@ -18,7 +19,7 @@ func QueryTopics() (topics []*Topic, err error) {
 
 //查询指定用户ID的所有话题
 func QueryTopicsByUserID(userId int) (topics []*Topic, err error) {
-	return topics, db.Where("user_id=?", userId).Find(&topics).Error
+	return topics, db.Order("created_at desc").Where("user_id=?", userId).Find(&topics).Error
 }
 
 //按话题名查询话题

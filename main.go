@@ -95,6 +95,7 @@ func main() {
 	r.GET("/getTopics", controller.GetTopics)
 	r.GET("/getTopicsByUserID/:userId", controller.GetTopicsByUserID)
 	r.POST("/addTopic", controller.AddTopic)
+	r.POST("/deleteTopic", controller.DeleteTopic)
 	//upload
 	r.POST("/uploadArticleImage", controller.UploadArticleImage)
 	r.POST("/uploadArticleAttachImage/:userId/:key", controller.UploadArticleAttachImage)
