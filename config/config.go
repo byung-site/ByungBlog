@@ -1,7 +1,7 @@
 package config
 
 import (
-	"byung/logger"
+	"byung/log"
 	"encoding/json"
 	"os"
 )
@@ -9,7 +9,8 @@ import (
 type Config struct {
 	DataDirectory             string
 	ListenAddress             string
-	CertPath                  string
+	CertFile                  string
+	KeyFile                   string
 	Https                     bool
 	Statics                   string
 	DefaultAvatar             string
@@ -23,14 +24,14 @@ var confFile = "./conf/config.json"
 func init() {
 	configFile, err := os.Open(confFile)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		os.Exit(-1)
 	}
 	defer configFile.Close()
 	decoder := json.NewDecoder(configFile)
 	err = decoder.Decode(&Conf)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		os.Exit(-1)
 	}
 }

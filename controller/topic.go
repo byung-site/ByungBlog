@@ -1,49 +1,50 @@
-package controllers
+package controller
 
 import (
 	"bytes"
-	"byung/logger"
-	"byung/models"
 	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo"
+
+	"byung/log"
+	"byung/model"
 )
 
 func AddTopic(c echo.Context) error {
 	name := c.FormValue("topic")
 	userId := c.FormValue("userId")
 
-	_, err := models.QueryTopicByName(name)
+	_, err := model.QueryTopicByName(name)
 	if err != nil {
 		userIdInt, _ := strconv.Atoi(userId)
-		topic := models.Topic{
+		topic := model.Topic{
 			Name:   name,
 			UserId: userIdInt,
 		}
-		if err := models.SaveTopic(&topic); err != nil {
-			logger.Error(err)
+		if err := model.SaveTopic(&topic); err != nil {
+			log.Error(err)
 			return ResponseOk(c, "新建话题失败")
 		}
 
-		topic, err := models.QueryTopicByName(name)
+		topic, err := model.QueryTopicByName(name)
 		if err != nil {
-			logger.Error(err)
+			log.Error(err)
 			return ResponseOk(c, "新建话题失败")
 		}
 
-		logger.Infof("added \"%s\" topic, id=%d\n", name, topic.ID)
+		log.Infof("added \"%s\" topic, id=%d\n", name, topic.ID)
 		return ResponseOk(c, topic.ID)
 	}
-	logger.Infof("\"%s\" topic aready exist\n", name)
+	log.Infof("\"%s\" topic aready exist\n", name)
 	return ResponseError(c, "话题已存在")
 }
 
 //得到所有话题
 func GetTopics(c echo.Context) error {
-	topics, err := models.QueryTopics()
+	topics, err := model.QueryTopics()
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return c.String(http.StatusInternalServerError, "查询话题失败")
 	}
 
@@ -56,9 +57,9 @@ func GetTopicsByUserID(c echo.Context) error {
 	userId := c.Param("userId")
 
 	userIdInt, _ := strconv.Atoi(userId)
-	topics, err := models.QueryTopicsByUserID(userIdInt)
+	topics, err := model.QueryTopicsByUserID(userIdInt)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return c.String(http.StatusInternalServerError, "查询话题失败")
 	}
 
@@ -72,13 +73,13 @@ func DeleteTopic(c echo.Context) error {
 	topicId := c.FormValue("topicId")
 
 	id, _ := strconv.Atoi(topicId)
-	if err := models.DeleteTopicById(id); err != nil {
+	if err := model.DeleteTopicById(id); err != nil {
 		return c.String(http.StatusInternalServerError, "删除话题失败")
 	}
 	return c.String(http.StatusOK, "删除话题成功")
 }
 
-func queryArticleCountPerTopic(topics []*models.Topic) {
+func queryArticleCountPerTopic(topics []*model.Topic) {
 	var itemCount int
 	var count int
 	var err error
@@ -86,9 +87,9 @@ func queryArticleCountPerTopic(topics []*models.Topic) {
 	for index, _ := range topics {
 		var buffer bytes.Buffer
 
-		itemCount, err = models.QueryArticleCountByTopicID(topics[index].ID)
+		itemCount, err = model.QueryArticleCountByTopicID(topics[index].ID)
 		if err != nil {
-			logger.Error(err)
+			log.Error(err)
 			continue
 		}
 		itemCountStr := strconv.Itoa(itemCount)

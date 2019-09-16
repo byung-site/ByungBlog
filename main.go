@@ -1,17 +1,19 @@
 package main
 
 import (
-	"byung/config"
-	controller "byung/controllers"
-	"byung/logger"
-	_ "byung/models"
 	"os"
 	"os/signal"
 
 	"github.com/labstack/echo"
-	"golang.org/x/crypto/acme/autocert"
+	"github.com/labstack/echo/middleware"
+
+	"byung/config"
+	controller "byung/controller"
+	"byung/log"
+	_ "byung/model"
 )
 
+//init configure and log
 func init() {
 
 	uploadsDir := config.Conf.DataDirectory + "/uploads"
@@ -20,7 +22,7 @@ func init() {
 	_, err := os.Stat(uploadsDir)
 	if exist := os.IsExist(err); exist == false {
 		if err = os.MkdirAll(uploadsDir, os.ModePerm); err != nil {
-			logger.Error(err)
+			log.Error(err)
 			os.Exit(-1)
 		}
 	} else {
@@ -29,25 +31,26 @@ func init() {
 	_, err = os.Stat(logDir)
 	if exist := os.IsExist(err); exist == false {
 		if err = os.MkdirAll(logDir, os.ModePerm); err != nil {
-			logger.Error(err)
+			log.Error(err)
 			os.Exit(-1)
 		}
 	} else {
 	}
 
-	logger.Record(logDir, 30)
+	log.Record(logDir, 30)
 }
 
+// handle ctrl + c signal
 func registerSignal() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
+
 	go func() {
 		for _ = range signalChan {
-			logger.Close()
+			log.Close()
 			os.Exit(1)
 		}
 	}()
-
 }
 
 func main() {
@@ -56,43 +59,53 @@ func main() {
 	registerSignal()
 
 	e.Static("/", "build")
-	//user
+	// login route
 	e.POST("/login", controller.Login)
+	// register route
 	e.POST("/register", controller.Register)
-	e.POST("/changeNickname", controller.ChangeNickname)
-	e.POST("/changeEmail", controller.ChangeEmail)
-	e.POST("/changePassword", controller.ChangePassword)
-	e.POST("/changeAvatar/:userid", controller.ChangeAvatar)
+
+	// API group
+	r := e.Group("/api")
+	// Configure middleware with the custom claims type
+	cfg := middleware.JWTConfig{
+		Claims:      &controller.JWTUserClaims{},
+		TokenLookup: "cookie:token",
+		SigningKey:  []byte("1qaz@WSX@@@"),
+	}
+	r.Use(middleware.JWTWithConfig(cfg))
+	r.POST("/changeNickname", controller.ChangeNickname)
+	r.POST("/changeEmail", controller.ChangeEmail)
+	r.POST("/changePassword", controller.ChangePassword)
+	r.POST("/changeAvatar/:userid", controller.ChangeAvatar)
 	//article
-	e.GET("/createKey", controller.CreateArticleKey)
-	e.POST("/saveArticle", controller.SaveArticle)
-	e.GET("/getArticles", controller.GetArticles)
-	e.GET("/getPublish", controller.GetPublishArticles)
-	e.GET("/getArticle/:key", controller.GetArticle)
-	e.GET("/getNewest", controller.GetNewestArticle)
-	e.GET("/getHottest", controller.GetHottestArticle)
-	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
-	e.GET("/getArticlesByUserID/:userid", controller.GetArticlesByUserID)
-	e.POST("/delArticle", controller.DeleteArticle)
+	r.GET("/createKey", controller.CreateArticleKey)
+	r.POST("/saveArticle", controller.SaveArticle)
+	r.GET("/getArticles", controller.GetArticles)
+	r.GET("/getPublish", controller.GetPublishArticles)
+	r.GET("/getArticle/:key", controller.GetArticle)
+	r.GET("/getNewest", controller.GetNewestArticle)
+	r.GET("/getHottest", controller.GetHottestArticle)
+	r.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
+	r.GET("/getArticlesByUserID/:userid", controller.GetArticlesByUserID)
+	r.POST("/delArticle", controller.DeleteArticle)
 	//e.POST("/publish", controller.PublishArticle)
-	e.POST("/saveAndPublish", controller.SaveAndPublishArticle)
-	e.POST("/updateVisit", controller.UpdateVisit)
+	r.POST("/saveAndPublish", controller.SaveAndPublishArticle)
+	r.POST("/updateVisit", controller.UpdateVisit)
 	//topic
-	e.GET("/getTopics", controller.GetTopics)
-	e.GET("/getTopicsByUserID/:userId", controller.GetTopicsByUserID)
-	e.POST("/addTopic", controller.AddTopic)
+	r.GET("/getTopics", controller.GetTopics)
+	r.GET("/getTopicsByUserID/:userId", controller.GetTopicsByUserID)
+	r.POST("/addTopic", controller.AddTopic)
 	//upload
-	e.POST("/uploadArticleImage", controller.UploadArticleImage)
-	e.POST("/uploadArticleAttachImage/:userId/:key", controller.UploadArticleAttachImage)
+	r.POST("/uploadArticleImage", controller.UploadArticleImage)
+	r.POST("/uploadArticleAttachImage/:userId/:key", controller.UploadArticleAttachImage)
 	//view
-	e.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
-	e.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
+	r.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
+	r.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
 
 	if config.Conf.Https == false {
 		e.Logger.Fatal(e.Start(config.Conf.ListenAddress))
 	} else if config.Conf.Https == true {
-		e.AutoTLSManager.Cache = autocert.DirCache(config.Conf.CertPath)
-		e.Logger.Fatal(e.StartAutoTLS(config.Conf.ListenAddress))
+		e.Logger.Fatal(e.StartTLS(config.Conf.ListenAddress, config.Conf.CertFile, config.Conf.KeyFile))
 	} else {
 		e.Logger.Fatal("configure error")
 	}

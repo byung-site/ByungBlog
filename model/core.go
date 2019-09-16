@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"time"
@@ -21,7 +21,7 @@ type Model struct {
 func init() {
 	var err error
 
-	db, err = gorm.Open("postgres", "host=127.0.0.1 user=byung dbname=blogbyung sslmode=disable password=1qaz@WSX")
+	db, err = gorm.Open("postgres", "host=127.0.0.1 user=byung dbname=byung sslmode=disable password=1qaz@WSX")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -29,5 +29,4 @@ func init() {
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&Article{})
 	db.AutoMigrate(&Topic{})
-	db.AutoMigrate(&Image{})
 }

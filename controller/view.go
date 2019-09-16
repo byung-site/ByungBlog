@@ -1,8 +1,8 @@
-package controllers
+package controller
 
 import (
 	"byung/config"
-	"byung/logger"
+	"byung/log"
 	"net/http"
 	"os"
 
@@ -19,7 +19,7 @@ func ViewArticleImage(c echo.Context) error {
 
 	file, err := os.Open(url)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return c.String(http.StatusInternalServerError, "Fail to open image")
 	}
 	defer file.Close()
@@ -35,7 +35,7 @@ func ViewAvatar(c echo.Context) error {
 	url := config.Conf.DataDirectory + "/uploads/" + userId + "/avatar/" + filename
 	file, err := os.Open(url)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return c.String(http.StatusInternalServerError, "Fail to open image")
 	}
 	defer file.Close()

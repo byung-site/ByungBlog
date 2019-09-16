@@ -1,9 +1,6 @@
-package controllers
+package controller
 
 import (
-	"byung/config"
-	"byung/logger"
-	"byung/models"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -18,9 +15,13 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
+
+	"byung/config"
+	"byung/log"
+	"byung/model"
 )
 
-type jwtUserClaims struct {
+type JWTUserClaims struct {
 	Nickname string `json:"nickname"`
 	Email    string `json:"email"`
 	Avatar   string `json:"avatar"`
@@ -33,30 +34,30 @@ func Login(c echo.Context) error {
 	email := c.FormValue("email")
 	password := c.FormValue("password")
 
-	logger.Info("logining:", email)
+	log.Info("logining:", email)
 	if ret := verifyEmailFormat(email); ret == false {
-		return c.String(http.StatusInternalServerError, "该邮箱格式不正确!")
+		return ResponseFailure(c, "该邮箱格式不正确")
 	}
 
 	passHashStr, err := hash256(password)
 	if err != nil {
-		logger.Error(err)
-		return c.String(http.StatusInternalServerError, "内部错误!")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
-	user, err := models.QueryUserByEmailAndPassword(email, passHashStr)
+	user, err := model.QueryUserByEmailAndPassword(email, passHashStr)
 	if err != nil {
-		logger.Error(err)
-		return c.String(http.StatusInternalServerError, "邮箱或密码错误!")
+		log.Error(err)
+		return ResponseFailure(c, "邮箱或密码错误")
 	}
 	jwtToken, err := getJWTToken(&user)
 	if err != nil {
-		logger.Error(err)
-		return c.String(http.StatusInternalServerError, "内部错误!")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
-	logger.Info("login sucess:", email)
-	return c.String(http.StatusOK, jwtToken)
+	log.Info("login sucess:", email)
+	return ResponseOk(c, jwtToken)
 }
 
 func Register(c echo.Context) error {
@@ -65,39 +66,49 @@ func Register(c echo.Context) error {
 	password := c.FormValue("password")
 	confirm := c.FormValue("confirm")
 
-	logger.Info("registering:", nickname, "  ", email)
-	userCount, err := models.QueryUserCount()
+	log.Info("registering:", nickname, "  ", email)
+	userCount, err := model.QueryUserCount()
 	if err != nil {
-		logger.Error(err)
-		return c.String(http.StatusInternalServerError, "注册失败!")
+		log.Error(err)
+		return ResponseError(c, "服务器内部错误")
 	}
 	if userCount >= config.Conf.MaxUsers {
-		logger.Error("reach the maximum number of registrations")
-		return c.String(http.StatusInternalServerError, "用户数已满!")
+		log.Error("reach the maximum number of registrations")
+		return ResponseFailure(c, "用户数已满")
 	}
-	if user, err := models.QueryUserByNickname(nickname); err == nil && user.ID > 0 {
-		logger.Error(err)
-		return c.String(http.StatusInternalServerError, "该昵称已存在!")
+	u, err := model.QueryUserByNickname(nickname)
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "服务器内部错误")
+	}
+	if u.ID > 0 {
+		log.Error("the nickname aready exsits")
+		return ResponseFailure(c, "昵称已存在")
 	}
 
 	if ret := verifyEmailFormat(email); ret == false {
-		logger.Error("the email is not correct!")
-		return c.String(http.StatusInternalServerError, "该邮箱格式不正确!")
+		log.Error("the email is not correct")
+		return ResponseFailure(c, "该邮箱格式不正确")
 	}
 
-	if user, err := models.QueryUserByEmail(email); err == nil && user.ID > 0 {
-		logger.Error("the email aready exsits!")
-		return c.String(http.StatusInternalServerError, "该邮箱已存在!")
+	u, err = model.QueryUserByEmail(email)
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "服务器内部错误")
+	}
+	if u.ID > 0 {
+		log.Error("the email aready exsits")
+		return ResponseFailure(c, "邮箱已存在")
 	}
 
 	if passLen := len(password); passLen < 8 {
-		logger.Error("passwrod  to short")
-		return c.String(http.StatusInternalServerError, "密码要求8位以上")
+		log.Error("passwrod  to short")
+		return ResponseFailure(c, "密码要求8位以上")
 	}
 
 	if strings.Compare(password, confirm) != 0 {
-		logger.Error("two passwords are inconsistent")
-		return c.String(http.StatusInternalServerError, "密码不一致!")
+		log.Error("two passwords are inconsistent")
+		return ResponseFailure(c, "密码不一致")
 	}
 
 	hash := sha256.New()
@@ -105,7 +116,7 @@ func Register(c echo.Context) error {
 	passHashHex := hash.Sum(nil)
 	passHashStr := hex.EncodeToString(passHashHex)
 
-	user := &models.User{
+	user := &model.User{
 		Nickname: nickname,
 		Email:    email,
 		Password: passHashStr,
@@ -113,15 +124,23 @@ func Register(c echo.Context) error {
 		Role:     1,
 	}
 
-	if err := models.SaveUser(user); err != nil {
-		logger.Error(err)
-		return c.String(http.StatusInternalServerError, "用户注册失败!")
+	if err = model.SaveUser(user); err != nil {
+		log.Error(err)
+		return ResponseError(c, "服务器内部错误")
 	}
 
-	*user, _ = models.QueryUserByEmail(user.Email)
-	newDefaultAvatar(user)
-	logger.Error("register success: user ID:", user.ID, nickname, "  ", email)
-	return c.String(http.StatusOK, "注册成功")
+	*user, err = model.QueryUserByEmail(user.Email)
+	if err != nil {
+		log.Info("register success but create default avatar failed(", user.ID, " ", nickname, " ", email, ")")
+		return ResponseOk(c, "注册成功(创建默认头像失败)")
+	}
+	err = newDefaultAvatar(user)
+	if err != nil {
+		log.Info("register success but create default avatar failed(", user.ID, " ", nickname, " ", email, ")")
+		return ResponseOk(c, "注册成功(创建默认头像失败)")
+	}
+	log.Info("register success(", user.ID, " ", nickname, " ", email, ")")
+	return ResponseOk(c, "注册成功")
 }
 
 func ChangeNickname(c echo.Context) error {
@@ -136,14 +155,14 @@ func ChangeNickname(c echo.Context) error {
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
-	user, err := models.QueryUserById(userIdInt)
+	user, err := model.QueryUserById(userIdInt)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "查询用户失败! ")
 	}
 
 	user.Nickname = newNickname
 
-	if err = models.SaveUser(&user); err != nil {
+	if err = model.SaveUser(&user); err != nil {
 		return c.String(http.StatusInternalServerError, "更新用户失败! ")
 	}
 	jwtToken, err := getJWTToken(&user)
@@ -166,7 +185,7 @@ func ChangeEmail(c echo.Context) error {
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
-	user, err := models.QueryUserById(userIdInt)
+	user, err := model.QueryUserById(userIdInt)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "查询用户失败! ")
 	}
@@ -177,7 +196,7 @@ func ChangeEmail(c echo.Context) error {
 
 	user.Email = newEmail
 
-	if err = models.SaveUser(&user); err != nil {
+	if err = model.SaveUser(&user); err != nil {
 		return c.String(http.StatusInternalServerError, "更新用户失败! ")
 	}
 	jwtToken, err := getJWTToken(&user)
@@ -214,7 +233,7 @@ func ChangePassword(c echo.Context) error {
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
-	user, err := models.QueryUserById(userIdInt)
+	user, err := model.QueryUserById(userIdInt)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "查询用户失败! ")
 	}
@@ -224,7 +243,7 @@ func ChangePassword(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "密码hash256失败")
 	}
 
-	if err = models.SaveUser(&user); err != nil {
+	if err = model.SaveUser(&user); err != nil {
 		return c.String(http.StatusInternalServerError, "更新用户失败! ")
 	}
 
@@ -236,19 +255,19 @@ func ChangeAvatar(c echo.Context) error {
 
 	userId := c.Param("userid")
 	if userId == "" {
-		logger.Error("user ID can not be empty")
+		log.Error("user ID can not be empty")
 		return ResponseError(c, result)
 	}
 
 	file, err := c.FormFile("file")
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return ResponseError(c, result)
 	}
 
 	src, err := file.Open()
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return ResponseError(c, result)
 	}
 	defer src.Close()
@@ -256,21 +275,21 @@ func ChangeAvatar(c echo.Context) error {
 	//destination
 	dst, err := os.Create(config.Conf.DataDirectory + "/uploads/" + userId + "/avatar/" + file.Filename)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return ResponseError(c, result)
 	}
 	defer dst.Close()
 
 	//copy
 	if _, err = io.Copy(dst, src); err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return ResponseError(c, result)
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
-	user, err := models.QueryUserById(userIdInt)
+	user, err := model.QueryUserById(userIdInt)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return ResponseError(c, result)
 	}
 
@@ -279,13 +298,13 @@ func ChangeAvatar(c echo.Context) error {
 
 	jwtToken, err := getJWTToken(&user)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return ResponseError(c, result)
 	}
 
-	err = models.SaveUser(&user)
+	err = model.SaveUser(&user)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return ResponseError(c, result)
 	}
 	if oldAvatar != user.Avatar {
@@ -311,9 +330,9 @@ func hash256(str string) (string, error) {
 	return hashStr, nil
 }
 
-func getJWTToken(user *models.User) (string, error) {
+func getJWTToken(user *model.User) (string, error) {
 	//Set user claims
-	claims := &jwtUserClaims{
+	claims := &JWTUserClaims{
 		user.Nickname,
 		user.Email,
 		user.Avatar,
@@ -331,7 +350,7 @@ func getJWTToken(user *models.User) (string, error) {
 	return token.SignedString([]byte("1qaz@WSX@@@"))
 }
 
-func newDefaultAvatar(user *models.User) error {
+func newDefaultAvatar(user *model.User) error {
 	if user.ID == 0 {
 		return errors.New("user ID cannot be 0")
 	}

@@ -1,4 +1,8 @@
-package models
+package model
+
+import (
+	"github.com/jinzhu/gorm"
+)
 
 type User struct {
 	Model
@@ -14,11 +18,19 @@ func QueryUserByEmailAndPassword(email, password string) (user User, err error) 
 }
 
 func QueryUserByNickname(nickname string) (user User, err error) {
-	return user, db.Where("nickname = ?", nickname).Take(&user).Error
+	err = db.Where("nickname = ?", nickname).Take(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return user, nil
+	}
+	return user, err
 }
 
 func QueryUserByEmail(email string) (user User, err error) {
-	return user, db.Where("email = ?", email).Take(&user).Error
+	err = db.Where("email = ?", email).Take(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return user, nil
+	}
+	return user, err
 }
 
 func QueryUserById(id int) (user User, err error) {
