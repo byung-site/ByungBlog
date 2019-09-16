@@ -8,9 +8,12 @@ github.com/jinzhu/gorm
 github.com/jinzhu/inflection
 # github.com/labstack/echo v3.3.10+incompatible
 github.com/labstack/echo
+github.com/labstack/echo/middleware
 # github.com/labstack/gommon v0.3.0
 github.com/labstack/gommon/color
 github.com/labstack/gommon/log
+github.com/labstack/gommon/bytes
+github.com/labstack/gommon/random
 # github.com/mattn/go-colorable v0.1.2
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.9
