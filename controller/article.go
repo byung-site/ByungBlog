@@ -18,11 +18,11 @@ import (
 //生成key
 func CreateArticleKey(c echo.Context) error {
 	uuidv4 := uuid.NewV4()
-	return c.JSON(http.StatusOK, uuidv4)
+	return ResponseOk(c, uuidv4)
 }
 
 //保存同时发布文章
-func SaveAndPublishArticle(c echo.Context) error {
+func PublishArticle(c echo.Context) error {
 	key := c.FormValue("key")
 	userId := c.FormValue("userId")
 	topicId := c.FormValue("topicId")
@@ -33,11 +33,36 @@ func SaveAndPublishArticle(c echo.Context) error {
 
 	if title == "" || content == "" {
 		log.Error("title or content can not be empty")
-		return c.String(http.StatusInternalServerError, "标题或内容不能为空！")
+		return ResponseFailure(c, "标题或内容不能为空")
+	}
+	if key == "" {
+		log.Error("key can not be empty")
+		return ResponseFailure(c, "key不能为空")
+	}
+	if topicId == "" {
+		log.Error("topic ID can not be empty")
+		return ResponseFailure(c, "话题不能为空")
+	}
+	if userId == "0" || userId == "" {
+		log.Error("user ID can not be empty")
+		return ResponseFailure(c, "用户ID不能0或为空")
+	}
+	if summary == "" {
+		log.Error("summary can not be empty")
+		return ResponseFailure(c, "摘要不能为空")
 	}
 
-	userIdInt, _ := strconv.Atoi(userId)
-	topicIdInt, _ := strconv.Atoi(topicId)
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "内部错误")
+	}
+
+	topicIdInt, err := strconv.Atoi(topicId)
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "内部错误")
+	}
 
 	var a model.Article
 	article, err := model.QueryArticleByKey(key)
@@ -59,7 +84,7 @@ func SaveAndPublishArticle(c echo.Context) error {
 			}
 		} else {
 			log.Error(err)
-			return c.String(http.StatusInternalServerError, "保存失败！")
+			return ResponseError(c, "内部错误")
 		}
 	} else {
 		if err == nil {
@@ -80,10 +105,10 @@ func SaveAndPublishArticle(c echo.Context) error {
 	a.Publish = 1
 	if err = model.SaveArticle(&a); err != nil {
 		log.Error(err)
-		return c.String(http.StatusInternalServerError, "保存失败！")
+		return ResponseError(c, "内部错误")
 	}
 	log.Info("publish or update article: ", a.Title, " ", a.Key)
-	return c.String(http.StatusOK, "ok")
+	return ResponseOk(c, "发布成功")
 }
 
 //保存或更新文章
@@ -97,10 +122,26 @@ func SaveArticle(c echo.Context) error {
 
 	if title == "" || content == "" {
 		log.Error("title or content can not be empty")
-		return c.String(http.StatusInternalServerError, "标题或内容不能为空！")
+		return ResponseFailure(c, "标题或内容不能为空")
+	}
+	if key == "" {
+		log.Error("key can not be empty")
+		return ResponseFailure(c, "key不能为空")
+	}
+	if userId == "0" || userId == "" {
+		log.Error("user ID can not be empty")
+		return ResponseFailure(c, "用户ID不能0或为空")
+	}
+	if summary == "" {
+		log.Error("summary can not be empty")
+		return ResponseFailure(c, "摘要不能为空")
 	}
 
-	userIdInt, _ := strconv.Atoi(userId)
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "内部错误")
+	}
 
 	var a model.Article
 	article, err := model.QueryArticleByKey(key)
@@ -122,7 +163,7 @@ func SaveArticle(c echo.Context) error {
 			}
 		} else {
 			log.Error(err)
-			return c.String(http.StatusInternalServerError, "保存失败！")
+			return ResponseError(c, "内部错误")
 		}
 	} else {
 		if image != "" && article.Image != image {
@@ -138,20 +179,21 @@ func SaveArticle(c echo.Context) error {
 
 	if err = model.SaveArticle(&a); err != nil {
 		log.Error(err)
-		return c.String(http.StatusInternalServerError, "保存失败！")
+		return ResponseError(c, "内部错误")
 	}
 	log.Info("save or update article: ", a.Title, " ", a.Key)
-	return c.String(http.StatusOK, "ok")
+	return ResponseOk(c, "存稿成功")
 }
 
 //得到所有文章
 func GetArticles(c echo.Context) error {
 	articles, err := model.QueryAllArticles()
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询文章失败！")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
-	return c.JSON(http.StatusOK, articles)
+	return ResponseOk(c, articles)
 }
 
 //得到指定用户ID的所有文章
@@ -161,20 +203,23 @@ func GetArticlesByUserID(c echo.Context) error {
 
 	articles, err := model.QueryArticlesByUserID(uint(userId))
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询文章失败！")
+		return ResponseError(c, "内部错误")
 	}
 
-	return c.JSON(http.StatusOK, articles)
+	return ResponseOk(c, articles)
 }
 
 //得到发布的文章
 func GetPublishArticles(c echo.Context) error {
-	articles, err := model.QueryPublishArticles()
+	userIdStr := c.Param("userid")
+	userId, _ := strconv.Atoi(userIdStr)
+
+	articles, err := model.QueryPublishArticles(userId)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询文章失败！")
+		return ResponseError(c, "内部错误")
 	}
 
-	return c.JSON(http.StatusOK, articles)
+	return ResponseOk(c, articles)
 }
 
 //按key查询文章
@@ -183,13 +228,16 @@ func GetArticle(c echo.Context) error {
 
 	article, err := model.QueryArticleByKey(key)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询文章失败！")
+		log.Error(err)
+		return ResponseError(c, "查询文章失败")
 	}
+	log.Info(article)
 	article.User, err = model.QueryUserById(article.UserID)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询文章用户失败！")
+		log.Error(err)
+		return ResponseError(c, "查询文章所属用户失败")
 	}
-	return c.JSON(http.StatusOK, article)
+	return ResponseOk(c, article)
 }
 
 //得到最热文章
@@ -241,10 +289,11 @@ func GetArticlesByTopicID(c echo.Context) error {
 
 	articles, err := model.QueryArticlesByTopicID(uint(topicId))
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "得到最文章失败！")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
-	return c.JSON(http.StatusOK, articles)
+	return ResponseOk(c, articles)
 }
 
 func UpdateVisit(c echo.Context) error {
@@ -269,23 +318,14 @@ func UpdateVisit(c echo.Context) error {
 //删除文章
 func DeleteArticle(c echo.Context) error {
 	key := c.FormValue("key")
-	topicId := c.FormValue("topicId")
 
 	if err := model.DeleteArticleByKey(key); err != nil {
 		log.Error(err)
-		return c.String(http.StatusInternalServerError, "删除文章失败！")
+		return ResponseError(c, "内部错误")
 	}
 	log.Info("delete article: ", key)
 
-	topicIdInt, err := strconv.Atoi(topicId)
-	if err == nil {
-		count, err := model.QueryArticleCountByTopicID(uint(topicIdInt))
-		if err == nil && count == 0 {
-			model.DeleteTopicById(topicIdInt)
-			log.Info("delete topic: id is ", topicIdInt)
-		}
-	}
-	return c.String(http.StatusOK, "删除文章成功!")
+	return ResponseOk(c, "删除文章成功")
 }
 
 func newDefaultAttachImage(article *model.Article) error {

@@ -63,6 +63,12 @@ func main() {
 	e.POST("/login", controller.Login)
 	// register route
 	e.POST("/register", controller.Register)
+	e.GET("/getArticles", controller.GetArticles)
+	e.GET("/getTopics", controller.GetTopics)
+	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
+	//view
+	e.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
+	e.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
 
 	// API group
 	r := e.Group("/api")
@@ -80,28 +86,23 @@ func main() {
 	//article
 	r.GET("/createKey", controller.CreateArticleKey)
 	r.POST("/saveArticle", controller.SaveArticle)
-	r.GET("/getArticles", controller.GetArticles)
 	r.GET("/getPublish", controller.GetPublishArticles)
 	r.GET("/getArticle/:key", controller.GetArticle)
 	r.GET("/getNewest", controller.GetNewestArticle)
 	r.GET("/getHottest", controller.GetHottestArticle)
-	r.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
 	r.GET("/getArticlesByUserID/:userid", controller.GetArticlesByUserID)
+	r.GET("/getPublishArticles/:userid", controller.GetPublishArticles)
 	r.POST("/delArticle", controller.DeleteArticle)
 	//e.POST("/publish", controller.PublishArticle)
-	r.POST("/saveAndPublish", controller.SaveAndPublishArticle)
+	r.POST("/publishArticle/", controller.PublishArticle)
 	r.POST("/updateVisit", controller.UpdateVisit)
 	//topic
-	r.GET("/getTopics", controller.GetTopics)
 	r.GET("/getTopicsByUserID/:userId", controller.GetTopicsByUserID)
 	r.POST("/addTopic", controller.AddTopic)
 	r.POST("/deleteTopic", controller.DeleteTopic)
 	//upload
 	r.POST("/uploadArticleImage", controller.UploadArticleImage)
 	r.POST("/uploadArticleAttachImage/:userId/:key", controller.UploadArticleAttachImage)
-	//view
-	r.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
-	r.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
 
 	if config.Conf.Https == false {
 		e.Logger.Fatal(e.Start(config.Conf.ListenAddress))

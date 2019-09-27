@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo"
@@ -43,11 +42,11 @@ func GetTopics(c echo.Context) error {
 	topics, err := model.QueryTopics()
 	if err != nil {
 		log.Error(err)
-		return c.String(http.StatusInternalServerError, "查询话题失败")
+		return ResponseError(c, "查询话题失败")
 	}
 
 	queryArticleCountPerTopic(topics)
-	return c.JSON(http.StatusOK, topics)
+	return ResponseOk(c, topics)
 }
 
 //得到指定用户ID的所有话题

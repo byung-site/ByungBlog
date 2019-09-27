@@ -26,6 +26,7 @@ func init() {
 		panic(err.Error())
 	}
 
+	//db.LogMode(true)
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&Article{})
 	db.AutoMigrate(&Topic{})

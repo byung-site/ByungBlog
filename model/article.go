@@ -4,7 +4,7 @@ type Article struct {
 	Model
 	Key     string `gorm:"unique_index"`
 	UserID  int
-	User    User
+	User    User `gorm:-`
 	TopicID int
 	Image   string
 	Title   string `gorm:"type:character varying(200)"`
@@ -42,12 +42,12 @@ func QueryArticleCountByTopicID(topicid uint) (count int, err error) {
 
 //查询所有文章
 func QueryAllArticles() (articles []*Article, err error) {
-	return articles, db.Order("created_at").Preload("User").Find(&articles).Error
+	return articles, db.Order("created_at").Preload("User").Where("deleted_at IS NULL").Find(&articles).Error
 }
 
 //查询所有发布的文章
-func QueryPublishArticles() (articles []*Article, err error) {
-	return articles, db.Where("publish = ?", 1).Order("created_at").Preload("User").Find(&articles).Error
+func QueryPublishArticles(userId int) (articles []*Article, err error) {
+	return articles, db.Where("publish = ? and user_id = ?", 1, userId).Order("created_at").Preload("User").Find(&articles).Error
 }
 
 //查询最热的10篇文章

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -148,28 +147,34 @@ func ChangeNickname(c echo.Context) error {
 	newNickname := c.FormValue("newNickname")
 
 	if userId == "" {
-		return c.String(http.StatusInternalServerError, "用户ID不能为空")
+		log.Error("user ID can not be empty")
+		return ResponseFailure(c, "用户ID不能为空")
 	}
 	if newNickname == "" {
-		return c.String(http.StatusInternalServerError, "昵称不能为空")
+		log.Error("nickname can not be empty")
+		return ResponseFailure(c, "昵称不能为空")
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
 	user, err := model.QueryUserById(userIdInt)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询用户失败! ")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
 	user.Nickname = newNickname
 
 	if err = model.SaveUser(&user); err != nil {
-		return c.String(http.StatusInternalServerError, "更新用户失败! ")
+		log.Error(err)
+		return ResponseError(c, "内部错误 ")
 	}
 	jwtToken, err := getJWTToken(&user)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "jtw生成失败!")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
-	return c.String(http.StatusOK, jwtToken)
+	log.Info("change nickname successfully")
+	return ResponseOk(c, jwtToken)
 
 }
 
@@ -178,32 +183,39 @@ func ChangeEmail(c echo.Context) error {
 	newEmail := c.FormValue("newEmail")
 
 	if userId == "" {
-		return c.String(http.StatusInternalServerError, "用户ID不能为空")
+		log.Error("user ID can not be empty")
+		return ResponseFailure(c, "用户ID不能为空")
 	}
 	if newEmail == "" {
-		return c.String(http.StatusInternalServerError, "邮箱不能为空")
+		log.Error("email can not be empty")
+		return ResponseFailure(c, "邮箱不能为空")
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
 	user, err := model.QueryUserById(userIdInt)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询用户失败! ")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
 	if ret := verifyEmailFormat(newEmail); ret == false {
-		return c.String(http.StatusInternalServerError, "该邮箱格式不正确!")
+		log.Error("email format is incorrect")
+		return ResponseFailure(c, "该邮箱格式不正确")
 	}
 
 	user.Email = newEmail
 
 	if err = model.SaveUser(&user); err != nil {
-		return c.String(http.StatusInternalServerError, "更新用户失败! ")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 	jwtToken, err := getJWTToken(&user)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "jtw生成失败!")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
-	return c.String(http.StatusOK, jwtToken)
+	log.Info("change email successfully")
+	return ResponseOk(c, jwtToken)
 
 }
 
@@ -214,40 +226,60 @@ func ChangePassword(c echo.Context) error {
 	confirmPass := c.FormValue("confirmPass")
 
 	if userId == "" {
-		return c.String(http.StatusInternalServerError, "用户ID不能为空")
+		log.Error("user ID can not be empty")
+		return ResponseFailure(c, "用户ID不能为空")
 	}
 	if oldPass == "" {
-		return c.String(http.StatusInternalServerError, "老密码不能为空")
+		log.Error("old password can not be empty")
+		return ResponseFailure(c, "老密码不能为空")
 	}
 	if newPass == "" {
-		return c.String(http.StatusInternalServerError, "新密码不能为空")
+		log.Error("new password can not be empty")
+		return ResponseFailure(c, "新密码不能为空")
 	}
 	if confirmPass == "" {
-		return c.String(http.StatusInternalServerError, "新密码验证不能为空")
+		log.Error("comfilrm password can not be empty")
+		return ResponseFailure(c, "新密码验证不能为空")
 	}
 	if len(newPass) < 8 {
-		return c.String(http.StatusInternalServerError, "密码长度必须大于8")
+		log.Error("password is to short")
+		return ResponseFailure(c, "密码长度必须大于8")
 	}
 	if newPass != confirmPass {
-		return c.String(http.StatusInternalServerError, "两次输入的密码不同")
+		log.Error("two different inputs")
+		return ResponseFailure(c, "两次输入的密码不同")
 	}
 
 	userIdInt, _ := strconv.Atoi(userId)
 	user, err := model.QueryUserById(userIdInt)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "查询用户失败! ")
+		log.Error(err)
+		return ResponseFailure(c, "内部错误 ")
+	}
+
+	passwordHash, err := hash256(oldPass)
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "内部错误")
+	}
+	if passwordHash != user.Password {
+		log.Error("old password is not incorrect")
+		return ResponseFailure(c, "老密码不正确")
 	}
 
 	user.Password, err = hash256(newPass)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "密码hash256失败")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
 	if err = model.SaveUser(&user); err != nil {
-		return c.String(http.StatusInternalServerError, "更新用户失败! ")
+		log.Error(err)
+		return ResponseError(c, "内部错误")
 	}
 
-	return c.String(http.StatusOK, "密码更改成功")
+	log.Info("change password successfully")
+	return ResponseOk(c, "密码更改成功")
 }
 
 func ChangeAvatar(c echo.Context) error {
@@ -311,6 +343,7 @@ func ChangeAvatar(c echo.Context) error {
 		os.Remove(config.Conf.DataDirectory + "/uploads/" + userId + "/avatar/" + oldAvatar)
 	}
 
+	log.Info("change avatar successfully")
 	return ResponseOk(c, jwtToken)
 }
 
