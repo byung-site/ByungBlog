@@ -94,7 +94,7 @@ func main() {
 	r.GET("/getPublishArticles/:userid", controller.GetPublishArticles)
 	r.POST("/delArticle", controller.DeleteArticle)
 	//e.POST("/publish", controller.PublishArticle)
-	r.POST("/publishArticle/", controller.PublishArticle)
+	r.POST("/publishArticle", controller.PublishArticle)
 	r.POST("/updateVisit", controller.UpdateVisit)
 	//topic
 	r.GET("/getTopicsByUserID/:userId", controller.GetTopicsByUserID)
