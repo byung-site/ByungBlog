@@ -231,12 +231,15 @@ func GetArticle(c echo.Context) error {
 		log.Error(err)
 		return ResponseError(c, "查询文章失败")
 	}
-	log.Info(article)
+
 	article.User, err = model.QueryUserById(article.UserID)
 	if err != nil {
 		log.Error(err)
 		return ResponseError(c, "查询文章所属用户失败")
 	}
+
+	article.Visit++
+	model.SaveArticle(&article)
 	return ResponseOk(c, article)
 }
 
