@@ -66,6 +66,7 @@ func main() {
 	e.GET("/getArticles", controller.GetArticles)
 	e.GET("/getTopics", controller.GetTopics)
 	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
+	e.GET("/getArticle/:key", controller.GetArticle)
 	//view
 	e.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
 	e.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
@@ -87,7 +88,6 @@ func main() {
 	r.GET("/createKey", controller.CreateArticleKey)
 	r.POST("/saveArticle", controller.SaveArticle)
 	r.GET("/getPublish", controller.GetPublishArticles)
-	r.GET("/getArticle/:key", controller.GetArticle)
 	r.GET("/getNewest", controller.GetNewestArticle)
 	r.GET("/getHottest", controller.GetHottestArticle)
 	r.GET("/getArticlesByUserID/:userid", controller.GetArticlesByUserID)
