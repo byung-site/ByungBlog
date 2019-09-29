@@ -14,7 +14,7 @@ func SaveTopic(topic *Topic) error {
 
 //查询所有话题
 func QueryTopics() (topics []*Topic, err error) {
-	return topics, db.Find(&topics).Error
+	return topics, db.Order("created_at desc").Find(&topics).Error
 }
 
 //查询指定用户ID的所有话题
