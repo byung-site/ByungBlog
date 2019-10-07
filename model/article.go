@@ -23,7 +23,7 @@ func SaveArticle(article *Article) error {
 
 //查询指定key的文章
 func QueryArticleByKey(key string) (article Article, err error) {
-	return article, db.Where("key=?", key).Take(&article).Error
+	return article, db.Where("key=?", key).Preload("User").Preload("Topic").Take(&article).Error
 }
 
 //查询指定topicid的文章

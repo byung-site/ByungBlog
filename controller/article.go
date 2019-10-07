@@ -222,6 +222,58 @@ func GetPublishArticles(c echo.Context) error {
 	return ResponseOk(c, articles)
 }
 
+//得到同话题的下篇文章
+func GetNextArticleByKey(c echo.Context) error {
+	topicIdStr := c.Param("topicId")
+	key := c.Param("key")
+
+	topicId, _ := strconv.Atoi(topicIdStr)
+
+	articles, err := model.QueryArticlesByTopicID(uint(topicId))
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "内部错误")
+	}
+
+	var flag bool
+	for _, article := range articles {
+		if flag == true {
+			return ResponseOk(c, article)
+		}
+
+		if article.Key == key {
+			flag = true
+		}
+	}
+
+	return ResponseFailure(c, "没有下一篇了")
+}
+
+//得到同话题的上一篇文章
+func GetPreviousArticleBykey(c echo.Context) error {
+	topicIdStr := c.Param("topicId")
+	key := c.Param("key")
+
+	topicId, _ := strconv.Atoi(topicIdStr)
+
+	articles, err := model.QueryArticlesByTopicID(uint(topicId))
+	if err != nil {
+		log.Error(err)
+		return ResponseError(c, "内部错误")
+	}
+
+	for index, article := range articles {
+		if article.Key == key {
+			if index-1 >= 0 {
+				return ResponseOk(c, articles[index-1])
+			}
+			break
+		}
+	}
+
+	return ResponseFailure(c, "没有上一篇了")
+}
+
 //按key查询文章
 func GetArticle(c echo.Context) error {
 	key := c.Param("key")
@@ -232,14 +284,6 @@ func GetArticle(c echo.Context) error {
 		return ResponseError(c, "查询文章失败")
 	}
 
-	article.User, err = model.QueryUserById(article.UserID)
-	if err != nil {
-		log.Error(err)
-		return ResponseError(c, "查询文章所属用户失败")
-	}
-
-	article.Visit++
-	model.SaveArticle(&article)
 	return ResponseOk(c, article)
 }
 

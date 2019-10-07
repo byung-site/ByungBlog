@@ -67,6 +67,9 @@ func main() {
 	e.GET("/getTopics", controller.GetTopics)
 	e.GET("/getArticlesByTopicID/:id", controller.GetArticlesByTopicID)
 	e.GET("/getArticle/:key", controller.GetArticle)
+	e.GET("/getNext/:topicId/:key", controller.GetNextArticleByKey)
+	e.GET("/getPrevious/:topicId/:key", controller.GetPreviousArticleBykey)
+	e.POST("/updateVisit", controller.UpdateVisit)
 	//view
 	e.GET("/viewArticleImage/:userId/:key/:name", controller.ViewArticleImage)
 	e.GET("/viewAvatar/:userId/:name", controller.ViewAvatar)
@@ -95,7 +98,6 @@ func main() {
 	r.POST("/delArticle", controller.DeleteArticle)
 	//e.POST("/publish", controller.PublishArticle)
 	r.POST("/publishArticle", controller.PublishArticle)
-	r.POST("/updateVisit", controller.UpdateVisit)
 	//topic
 	r.GET("/getTopicsByUserID/:userId", controller.GetTopicsByUserID)
 	r.POST("/addTopic", controller.AddTopic)
